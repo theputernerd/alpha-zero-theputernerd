@@ -6,15 +6,18 @@ from logging import getLogger
 logger = getLogger(__name__)
 
 # noinspection PyArgumentList
-Winner = enum.Enum("Winner", "black white draw")
+#Winner = enum.Enum("Winner", "black white draw")
 
 # noinspection PyArgumentList
-Player = enum.Enum("Player", "black white")
+#Player = enum.Enum("Player", "black white")
+class Player :
+    white=1
+    black=2
 
-
-class Connect4Env:
+class Connect4Env:  ##TODO: Inherit
     def __init__(self):
         self.board = None
+
         self.turn = 0
         self.done = False
         self.winner = None  # type: Winner
@@ -72,7 +75,7 @@ class Connect4Env:
         if self.turn > 42:
             self.done = True
             if self.winner is None:
-                self.winner = Winner.draw
+                self.winner = 3
 
         return self.board, {}
 
@@ -120,9 +123,9 @@ class Connect4Env:
         if consecutive_count >= 4:
             four_in_a_row = True
             if 'x' == self.board[row][col].lower():
-                self.winner = Winner.white
+                self.winner = Player.white
             else:
-                self.winner = Winner.black
+                self.winner = Player.black
 
         return four_in_a_row
 
@@ -139,9 +142,9 @@ class Connect4Env:
         if consecutive_count >= 4:
             four_in_a_row = True
             if 'x' == self.board[row][col].lower():
-                self.winner = Winner.white
+                self.winner = Player.white
             else:
-                self.winner = Winner.black
+                self.winner = Player.black
 
         return four_in_a_row
 
@@ -163,9 +166,9 @@ class Connect4Env:
         if consecutive_count >= 4:
             count += 1
             if 'x' == self.board[row][col].lower():
-                self.winner = Winner.white
+                self.winner = Player.white
             else:
-                self.winner = Winner.black
+                self.winner = Player.black
 
         consecutive_count = 0
         j = col
@@ -181,9 +184,9 @@ class Connect4Env:
         if consecutive_count >= 4:
             count += 1
             if 'x' == self.board[row][col].lower():
-                self.winner = Winner.white
+                self.winner = Player.white
             else:
-                self.winner = Winner.black
+                self.winner = Player.black
 
         if count > 0:
             four_in_a_row = True
@@ -192,9 +195,9 @@ class Connect4Env:
 
     def _resigned(self):
         if self.player_turn() == Player.white:
-            self.winner = Winner.white
+            self.winner = Player.white
         else:
-            self.winner = Winner.black
+            self.winner = Player.black
         self.done = True
         self.resigned = True
 
@@ -228,9 +231,9 @@ class Connect4Env:
 
         if self.done:
             print("Game Over!")
-            if self.winner == Winner.white:
+            if self.winner == Player.white:
                 print("X is the winner")
-            elif self.winner == Winner.black:
+            elif self.winner == Player.black:
                 print("O is the winner")
             else:
                 print("Game was a draw")

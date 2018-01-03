@@ -6,7 +6,7 @@ from time import sleep
 from alpha_zero.agent.model_connect4 import Connect4Model
 from alpha_zero.agent.player_connect4 import Connect4Player
 from alpha_zero.config import Config
-from alpha_zero.env.connect4_env import Connect4Env, Winner, Player
+from alpha_zero.env.connect4_env import Connect4Env
 from alpha_zero.lib import tf_util
 from alpha_zero.lib.data_helper import get_next_generation_model_dirs
 from alpha_zero.lib.model_helpler import save_as_best_model, load_best_model_weight
@@ -64,7 +64,8 @@ class EvaluateWorker:
                 logger.debug(f"win count reach {results.count(1)} so change best model")
                 break
 
-        winning_rate = sum(results) / len(results)
+        l = len(results)
+        winning_rate = 0 if l > 0 else sum(results) / l  # TODO: Check this for an error. I got  a divide by zero error.
         logger.debug(f"winning rate {winning_rate*100:.1f}%")
         return winning_rate >= self.config.eval.replace_rate
 
@@ -81,19 +82,19 @@ class EvaluateWorker:
 
         env.reset()
         while not env.done:
-            if env.player_turn() == Player.black:
+            if env.player_turn() == 2:
                 action = black.action(env.board)
             else:
                 action = white.action(env.board)
             env.step(action)
 
         ng_win = None
-        if env.winner == Winner.white:
+        if env.winner == 1:
             if best_is_white:
                 ng_win = 0
             else:
                 ng_win = 1
-        elif env.winner == Winner.black:
+        elif env.winner == 2:
             if best_is_white:
                 ng_win = 1
             else:

@@ -1,44 +1,45 @@
 from logging import getLogger
 
 from alpha_zero.config import Config, PlayWithHumanConfig
-from alpha_zero.play_game.game_model import PlayWithHuman
-from alpha_zero.env.connect4_env import Connect4Env, Player, Winner
+#from alpha_zero.play_game.game_model import PlayingField
+from alpha_zero.env.connect4_env import Connect4Env
 from random import random
-
+from alpha_zero.player.ai_player import *
+from alpha_zero.player.human import *
 logger = getLogger(__name__)
 
+
+
 def start(config: Config):
-    PlayWithHumanConfig().update_play_config(config.play)
-    connect4_model = PlayWithHuman(config)
+    env = Connect4Env().reset()
+    humanPlayer=Human_Player(env,playing_as=2)
+    env = Connect4Env().reset()
+    aiPlayer=Alpha_Zero_Player(config,env,1)
 
     while True:
         env = Connect4Env().reset()
-        human_is_black = random() < 0.5
-        connect4_model.start_game(human_is_black)
-
+        humanPlayer.playing_as = 3 - aiPlayer.playing_as
         while not env.done:
-            if env.player_turn() == Player.black:
-                if not human_is_black:
-                    action = connect4_model.move_by_ai(env)
-                    print("IA moves to: " + str(action))
-                else:
-                    action = connect4_model.move_by_human(env)
-                    print("You move to: " + str(action))
+            t=env.player_turn()
+            if t == aiPlayer.playing_as:
+                action = aiPlayer.get_move(env)
+                print("IA moves to: " + str(action))
+
+            elif t ==humanPlayer.playing_as:
+                action = humanPlayer.get_move(env)
+                print("You move to: " + str(action))
             else:
-                if human_is_black:
-                    action = connect4_model.move_by_ai(env)
-                    print("IA moves to: " + str(action))
-                else:
-                    action = connect4_model.move_by_human(env)
-                    print("You move to: " + str(action))
+                assert False #turn doesn't match a player.
             env.step(action)
             env.render()
 
         print("\nEnd of the game.")
         print("Game result:")
-        if env.winner == Winner.white:
+        if env.winner == 1:
             print("X wins")
-        elif env.winner == Winner.black:
+        elif env.winner == 2:
             print("O wins")
         else:
             print("Game was a draw")
+        aiPlayer.playing_as = humanPlayer.playing_as
+

@@ -8,7 +8,7 @@ import numpy as np
 
 from alpha_zero.agent.api_connect4 import Connect4ModelAPI
 from alpha_zero.config import Config
-from alpha_zero.env.connect4_env import Connect4Env, Winner, Player
+from alpha_zero.env.connect4_env import Connect4Env
 
 CounterKey = namedtuple("CounterKey", "board next_player")
 QueueItem = namedtuple("QueueItem", "state future")
@@ -96,11 +96,11 @@ class Connect4Player:
         :return:
         """
         if env.done:
-            if env.winner == Winner.white:
+            if env.winner == 1:
                 return 1
-            elif env.winner == Winner.black:
+            elif env.winner == 2:
                 return -1
-            else:
+            else: #draw should be winner=3
                 return 0
 
         key = self.counter_key(env)
@@ -111,7 +111,7 @@ class Connect4Player:
         # is leaf?
         if key not in self.expanded:  # reach leaf node
             leaf_v = await self.expand_and_evaluate(env)
-            if env.player_turn() == Player.white:
+            if env.player_turn() == 1:
                 return leaf_v  # Value for white
             else:
                 return -leaf_v  # Value for white == -Value for white
@@ -143,7 +143,7 @@ class Connect4Player:
         self.now_expanding.add(key)
 
         black_ary, white_ary = env.black_and_white_plane()
-        state = [black_ary, white_ary] if env.player_turn() == Player.black else [white_ary, black_ary]
+        state = [black_ary, white_ary] if env.player_turn() == 2 else [white_ary, black_ary]
         future = await self.predict(np.array(state))  # type: Future
         await future
         leaf_p, leaf_v = future.result()
@@ -223,7 +223,7 @@ class Connect4Player:
                  self.play_config.noise_eps * np.random.dirichlet([self.play_config.dirichlet_alpha] * self.labels_n)
 
         u_ = self.play_config.c_puct * p_ * xx_ / (1 + self.var_n[key])
-        if env.player_turn() == Player.white:
+        if env.player_turn() == 1:
             v_ = (self.var_q[key] + u_ + 1000) * legal_moves
         else:
             # When enemy's selecting action, flip Q-Value.

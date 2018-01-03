@@ -43,7 +43,7 @@ class OptimizeWorker:
     def training(self):
         self.compile_model()
         last_load_data_step = last_save_step = self.total_steps #= self.config.trainer.start_total_steps
-        min_data_size_to_learn = 10000
+        min_data_size_to_learn = 5000
         self.load_play_data()
         #total_steps=self.total_steps
 
@@ -223,7 +223,7 @@ class OptimizeWorker:
             env = Connect4Env().update(board)
 
             black_ary, white_ary = env.black_and_white_plane()
-            state = [black_ary, white_ary] if env.player_turn() == Player.black else [white_ary, black_ary]
+            state = [black_ary, white_ary] if env.player_turn() == 2 else [white_ary, black_ary]
 
             state_list.append(state)
             policy_list.append(policy)

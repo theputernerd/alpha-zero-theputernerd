@@ -5,7 +5,7 @@ from time import time
 
 from alpha_zero.agent.player_connect4 import Connect4Player
 from alpha_zero.config import Config
-from alpha_zero.env.connect4_env import Connect4Env, Winner, Player
+from alpha_zero.env.connect4_env import Connect4Env
 from alpha_zero.lib import tf_util
 from alpha_zero.lib.data_helper import get_game_data_filenames, write_game_data_to_file
 from alpha_zero.lib.model_helpler import load_best_model_weight, save_as_best_model, \
@@ -56,7 +56,7 @@ class SelfPlayWorker:
         self.black = Connect4Player(self.config, self.model)
         self.white = Connect4Player(self.config, self.model)
         while not self.env.done:
-            if self.env.player_turn() == Player.black:
+            if self.env.player_turn() == 2:
                 action = self.black.action(self.env.board)
             else:
                 action = self.white.action(self.env.board)
@@ -88,9 +88,9 @@ class SelfPlayWorker:
             os.remove(files[i])
 
     def finish_game(self):
-        if self.env.winner == Winner.black:
+        if self.env.winner == 2:
             black_win = 1
-        elif self.env.winner == Winner.white:
+        elif self.env.winner == 1:
             black_win = -1
         else:
             black_win = 0
@@ -117,7 +117,6 @@ class SelfPlayWorker:
         except(FileNotFoundError):
             raise
             pass
-
 
 
         return model
