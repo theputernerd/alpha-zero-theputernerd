@@ -2,7 +2,7 @@ import os
 from logging import getLogger
 from random import random
 from time import sleep
-
+import contextlib
 from alpha_zero.agent.model_connect4 import Connect4Model
 from alpha_zero.agent.player_connect4 import Connect4Player
 from alpha_zero.config import Config
@@ -141,8 +141,26 @@ class EvaluateWorker:
             moveToDir=os.path.abspath(moveToDir+"\\"+modelName)
             logger.debug(f"Copying from {model_dir} to {moveToDir}")
             self.copyDirectory(model_dir,moveToDir)
-        os.remove(config_path)
-        os.remove(weight_path)
-        os.remove(stats_path)
+        try :
+            os.remove(config_path)
+            os.remove(weight_path)
+            os.remove(stats_path)
 
-        os.rmdir(model_dir)
+            os.rmdir(model_dir)
+        except PermissionError as e:
+            logger.error("PermissionError line 150 evaluate.py. Can't remove from {model_dir}")
+            count=0
+            while True:
+                if count >10 : raise e
+
+                sleep(10)
+                try:
+                    with contextlib.suppress(FileNotFoundError): #one of the files might not bexist now.
+                        os.remove(config_path)
+                        os.remove(weight_path)
+                        os.remove(stats_path)
+                        os.rmdir(model_dir)
+                except PermissionError as e:
+                    pass
+
+                count+=1
