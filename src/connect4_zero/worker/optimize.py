@@ -15,7 +15,7 @@ from connect4_zero.lib.data_helper import get_game_data_filenames, read_game_dat
     get_next_generation_model_dirs
 from connect4_zero.lib.model_helpler import load_best_model_weight
 from connect4_zero.env.connect4_env import Connect4Env, Player
-
+import json
 
 logger = getLogger(__name__)
 
@@ -33,6 +33,8 @@ class OptimizeWorker:
         self.loaded_data = {}
         self.dataset = None
         self.optimizer = None
+        self.total_steps=self.config.trainer.start_total_steps
+        self.stats={'total_steps':self.total_steps,}
 
     def start(self):
         self.model = self.load_model()
@@ -40,9 +42,10 @@ class OptimizeWorker:
 
     def training(self):
         self.compile_model()
-        last_load_data_step = last_save_step = total_steps = self.config.trainer.start_total_steps
+        last_load_data_step = last_save_step = self.total_steps #= self.config.trainer.start_total_steps
         min_data_size_to_learn = 10000
         self.load_play_data()
+        #total_steps=self.total_steps
 
         while True:
             if self.dataset_size < min_data_size_to_learn:
@@ -50,16 +53,16 @@ class OptimizeWorker:
                 sleep(60)
                 self.load_play_data()
                 continue
-            self.update_learning_rate(total_steps)
+            self.update_learning_rate(self.total_steps)
             steps = self.train_epoch(self.config.trainer.epoch_to_checkpoint)
-            total_steps += steps
-            if last_save_step + self.config.trainer.save_model_steps < total_steps:
-                self.save_current_model()
-                last_save_step = total_steps
+            self.total_steps += steps
+            if last_save_step + self.config.trainer.save_model_steps < self.total_steps:
+                self.save_current_model(steps=self.total_steps)
+                last_save_step = self.total_steps
 
-            if last_load_data_step + self.config.trainer.load_data_steps < total_steps:
+            if last_load_data_step + self.config.trainer.load_data_steps < self.total_steps:
                 self.load_play_data()
-                last_load_data_step = total_steps
+                last_load_data_step = self.total_steps
 
     def train_epoch(self, epochs):
         tc = self.config.trainer
@@ -80,7 +83,7 @@ class OptimizeWorker:
         # ~400k: 1e-2
         # 400k~600k: 1e-3
         # 600k~: 1e-4
-
+        #TODO: Place experience annealing here.
         if total_steps < 100000:
             lr = 1e-2
         elif total_steps < 500000:
@@ -92,14 +95,23 @@ class OptimizeWorker:
         K.set_value(self.optimizer.lr, lr)
         logger.debug(f"total step={total_steps}, set learning rate to {lr}")
 
-    def save_current_model(self):
+    def save_current_model(self,steps=None):
         rc = self.config.resource
-        model_id = datetime.now().strftime("%Y%m%d-%H%M%S.%f")
+        if steps==None:
+            steps=""
+        else:
+            steps="_"+str(steps)
+        model_id = datetime.now().strftime("%Y%m%d-%H%M%S.%f")+steps
         model_dir = os.path.join(rc.next_generation_model_dir, rc.next_generation_model_dirname_tmpl % model_id)
         os.makedirs(model_dir, exist_ok=True)
         config_path = os.path.join(model_dir, rc.next_generation_model_config_filename)
         weight_path = os.path.join(model_dir, rc.next_generation_model_weight_filename)
+        stats_path= os.path.join(model_dir, rc.next_generation_model_stats_filename)
+
         self.model.save(config_path, weight_path)
+        self.save_stats(stats_path)
+
+
 
     def collect_all_loaded_data(self):
         state_ary_list, policy_ary_list, z_ary_list = [], [], []
@@ -119,22 +131,48 @@ class OptimizeWorker:
             return 0
         return len(self.dataset[0])
 
+    def save_stats(self,filename):
+        self.stats['total_steps']=self.total_steps
+
+        with open(filename, 'w') as f:
+            json.dump(self.stats, f)
+
+    def load_stats(self,filename):
+        try:
+            with open(filename, 'r') as f:
+                self.stats=json.load(f)
+                self.total_steps=self.stats['total_steps']
+        except:
+            logger.debug(f"stats not loaded from {filename}")
+            self.stats['total_steps']=self.total_steps
+            self.total_steps=self.stats['total_steps']
+        pass
+
     def load_model(self):
         from connect4_zero.agent.model_connect4 import Connect4Model
         model = Connect4Model(self.config)
         rc = self.config.resource
 
         dirs = get_next_generation_model_dirs(rc)
+
         if not dirs:
             logger.debug(f"loading best model")
             if not load_best_model_weight(model):
                 raise RuntimeError(f"Best model can not loaded!")
+            stats_path = rc.model_best_stats_path
+            self.load_stats(stats_path)
+        ###################
+
         else:
+            #TODO: Why does this load the latest and not the best?
             latest_dir = dirs[-1]
             logger.debug(f"loading latest model")
             config_path = os.path.join(latest_dir, rc.next_generation_model_config_filename)
             weight_path = os.path.join(latest_dir, rc.next_generation_model_weight_filename)
+            stats_path=os.path.join(latest_dir, rc.next_generation_model_stats_filename)
             model.load(config_path, weight_path)
+            self.load_stats(stats_path)
+
         return model
 
     def load_play_data(self):

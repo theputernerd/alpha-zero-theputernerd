@@ -20,7 +20,6 @@ def save_as_best_model(model):
     """
     return model.save(model.config.resource.model_best_config_path, model.config.resource.model_best_weight_path)
 
-
 def reload_best_model_weight_if_changed(model):
     """
 

@@ -16,7 +16,6 @@ HistoryItem = namedtuple("HistoryItem", "action policy values visit")
 
 logger = getLogger(__name__)
 
-
 class Connect4Player:
     def __init__(self, config: Config, model, play_config=None):
 

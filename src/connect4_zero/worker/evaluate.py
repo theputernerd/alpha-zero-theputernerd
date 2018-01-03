@@ -10,6 +10,7 @@ from connect4_zero.env.connect4_env import Connect4Env, Winner, Player
 from connect4_zero.lib import tf_util
 from connect4_zero.lib.data_helper import get_next_generation_model_dirs
 from connect4_zero.lib.model_helpler import save_as_best_model, load_best_model_weight
+import shutil
 
 logger = getLogger(__name__)
 
@@ -30,16 +31,20 @@ class EvaluateWorker:
 
     def start(self):
         self.best_model = self.load_best_model()
-
         while True:
             ng_model, model_dir = self.load_next_generation_model()
             logger.debug(f"start evaluate model {model_dir}")
             ng_is_great = self.evaluate_model(ng_model)
+
             if ng_is_great:
                 logger.debug(f"New Model become best model: {model_dir}")
                 save_as_best_model(ng_model)
                 self.best_model = ng_model
-            self.remove_model(model_dir)
+
+                self.remove_model(model_dir,moveToDir=self.best_model.config.resource.history_best_dir)
+
+            else:
+                self.remove_model(model_dir,moveToDir=self.best_model.config.resource.history_other_dir)
 
     def evaluate_model(self, ng_model):
         results = []
@@ -115,10 +120,28 @@ class EvaluateWorker:
         model.load(config_path, weight_path)
         return model, model_dir
 
-    def remove_model(self, model_dir):
+    def copyDirectory(self,src, dest):
+        try:
+            shutil.copytree(src, dest)
+        # Directories are the same
+        except shutil.Error as e:
+            print('Directory not copied. Error: %s' % e)
+        # Any error saying that the directory doesn't exist
+        except OSError as e:
+            print('Directory not copied. Error: %s' % e)
+
+    def remove_model(self, model_dir,moveToDir=None): #historyDir if you want to retain this model.
         rc = self.config.resource
         config_path = os.path.join(model_dir, rc.next_generation_model_config_filename)
         weight_path = os.path.join(model_dir, rc.next_generation_model_weight_filename)
+        stats_path=os.path.join(model_dir, rc.next_generation_model_stats_filename)
+        if moveToDir!= None :
+            modelName=os.path.basename(os.path.normpath(model_dir))
+            moveToDir=os.path.abspath(moveToDir+"\\"+modelName)
+            logger.debug(f"Copying from {model_dir} to {moveToDir}")
+            self.copyDirectory(model_dir,moveToDir)
         os.remove(config_path)
         os.remove(weight_path)
+        os.remove(stats_path)
+
         os.rmdir(model_dir)

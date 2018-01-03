@@ -24,7 +24,6 @@ class Connect4Model:
         self.config = config
         self.model = None  # type: Model
         self.digest = None
-
     def build(self):
         mc = self.config.model
         in_x = x = Input((2, 6, 7))  # [own(8x8), enemy(8x8)]
@@ -80,12 +79,22 @@ class Connect4Model:
             return m.hexdigest()
 
     def load(self, config_path, weight_path):
+
         if os.path.exists(config_path) and os.path.exists(weight_path):
             logger.debug(f"loading model from {config_path}")
-            with open(config_path, "rt") as f:
-                self.model = Model.from_config(json.load(f))
-            self.model.load_weights(weight_path)
-            self.digest = self.fetch_digest(weight_path)
+            try:  ##TODO: THere might be a thread clash with the file if another thread is moving the file at the time it is trying to be loaded. Need to check a few different places
+                with open(config_path, "rt") as f:
+                    self.model = Model.from_config(json.load(f))
+            except:
+                logger.error("line 89 model_connect4.py!!!!!!!!!!!!!!!!!!!!!Error loading model file")
+            try:
+
+                self.model.load_weights(weight_path)
+                self.digest = self.fetch_digest(weight_path)
+
+            except:
+                logger.error("line 95 model_connect4.py!!!!!!!!!!!!!!!!!!!Error loading weights")
+
             logger.debug(f"loaded model digest = {self.digest}")
             return True
         else:

@@ -100,10 +100,26 @@ class SelfPlayWorker:
 
     def load_model(self):
         from connect4_zero.agent.model_connect4 import Connect4Model
+        from shutil import copyfile
         model = Connect4Model(self.config)
         if self.config.opts.new or not load_best_model_weight(model):
             model.build()
+
             save_as_best_model(model)
+            #self.model_best_config_path = os.path.join(self.model_dir, "model_best_config.json")
+            #self.model_best_weight_path = os.path.join(self.model_dir, "model_best_weight.h5")
+            #self.model_best_stats_path = os.path.join(self.model_dir, "model_best_stats.json"
+
+        try :
+            copyfile(self.config.resource.model_best_config_path,self.config.resource.history_best_dir+"\\"+self.config.resource.next_generation_model_config_filename)
+            copyfile(self.config.resource.model_best_weight_path,self.config.resource.history_best_dir+"\\"+self.config.resource.next_generation_model_weight_filename)
+            #copyfile(self.config.resource.model_best_stats_path,self.config.resource.history_best_dir+"\\"+self.config.resource.next_generation_model_stats_filename)
+        except(FileNotFoundError):
+            raise
+            pass
+
+
+
         return model
 
 

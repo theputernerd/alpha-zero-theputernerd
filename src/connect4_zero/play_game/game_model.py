@@ -7,7 +7,6 @@ from connect4_zero.lib.model_helpler import load_best_model_weight
 
 logger = getLogger(__name__)
 
-
 class PlayWithHuman:
     def __init__(self, config: Config):
         self.config = config

@@ -7,8 +7,7 @@ from .config import Config
 
 logger = getLogger(__name__)
 
-CMD_LIST = ['self', 'opt', 'eval', 'play_gui']
-
+CMD_LIST = ['self', 'opt', 'eval', 'play_gui','MCTS_Test']
 
 def create_parser():
     parser = argparse.ArgumentParser()
@@ -18,14 +17,12 @@ def create_parser():
     parser.add_argument("--total-step", help="set TrainerConfig.start_total_steps", type=int)
     return parser
 
-
 def setup(config: Config, args):
     config.opts.new = args.new
     if args.total_step is not None:
         config.trainer.start_total_steps = args.total_step
     config.resource.create_directories()
     setup_logger(config.resource.main_log_path)
-
 
 def start():
     parser = create_parser()
@@ -49,3 +46,6 @@ def start():
     elif args.cmd == 'play_gui':
         from .play_game import gui
         return gui.start(config)
+
+
+
