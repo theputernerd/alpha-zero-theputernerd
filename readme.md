@@ -79,7 +79,7 @@ Self-Play
 --------
 
 ```bash
-python src/connect4_zero/run.py self
+python src/alpha_zero/run.py self
 ```
 
 When executed, Self-Play will start using BestModel.
@@ -87,13 +87,13 @@ If the BestModel does not exist, new random model will be created and become Bes
 
 ### options
 * `--new`: create new BestModel
-* `--type mini`: use mini config for testing, (see `src/connect4_zero/configs/mini.py`)
+* `--type mini`: use mini config for testing, (see `src/alpha_zero/configs/mini.py`)
 
 Trainer
 -------
 
 ```bash
-python src/connect4_zero/run.py opt
+python src/alpha_zero/run.py opt
 ```
 
 When executed, Training will start.
@@ -101,14 +101,14 @@ A base model will be loaded from latest saved next-generation model. If not exis
 Trained model will be saved every 2000 steps(mini-batch) after epoch. 
 
 ### options
-* `--type mini`: use mini config for testing, (see `src/connect4_zero/configs/mini.py`)
+* `--type mini`: use mini config for testing, (see `src/alpha_zero/configs/mini.py`)
 * `--total-step`: specify total step(mini-batch) numbers. The total step affects learning rate of training. 
 
 Evaluator
 ---------
 
 ```bash
-python src/connect4_zero/run.py eval
+python src/alpha_zero/run.py eval
 ```
 
 When executed, Evaluation will start.
@@ -116,13 +116,13 @@ It evaluates BestModel and the latest next-generation model by playing about 200
 If next-generation model wins, it becomes BestModel. 
 
 ### options
-* `--type mini`: use mini config for testing, (see `src/connect4_zero/configs/mini.py`)
+* `--type mini`: use mini config for testing, (see `src/alpha_zero/configs/mini.py`)
 
 Play Game
 ---------
 
 ```bash
-python src/connect4_zero/run.py play_gui
+python src/alpha_zero/run.py play_gui
 ```
 
 

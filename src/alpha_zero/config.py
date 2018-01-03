@@ -16,9 +16,9 @@ class Config:
         self.resource = ResourceConfig()
 
         if config_type == "mini":
-            import connect4_zero.configs.mini as c
+            import alpha_zero.configs.mini as c
         elif config_type == "normal":
-            import connect4_zero.configs.normal as c
+            import alpha_zero.configs.normal as c
         else:
             raise RuntimeError(f"unknown config_type: {config_type}")
         self.model = c.ModelConfig()

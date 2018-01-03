@@ -7,14 +7,14 @@ import keras.backend as K
 import numpy as np
 from keras.optimizers import SGD
 
-from connect4_zero.agent.model_connect4 import Connect4Model, objective_function_for_policy, \
+from alpha_zero.agent.model_connect4 import Connect4Model, objective_function_for_policy, \
     objective_function_for_value
-from connect4_zero.config import Config
-from connect4_zero.lib import tf_util
-from connect4_zero.lib.data_helper import get_game_data_filenames, read_game_data_from_file, \
+from alpha_zero.config import Config
+from alpha_zero.lib import tf_util
+from alpha_zero.lib.data_helper import get_game_data_filenames, read_game_data_from_file, \
     get_next_generation_model_dirs
-from connect4_zero.lib.model_helpler import load_best_model_weight
-from connect4_zero.env.connect4_env import Connect4Env, Player
+from alpha_zero.lib.model_helpler import load_best_model_weight
+from alpha_zero.env.connect4_env import Connect4Env, Player
 import json
 
 logger = getLogger(__name__)
@@ -149,7 +149,7 @@ class OptimizeWorker:
         pass
 
     def load_model(self):
-        from connect4_zero.agent.model_connect4 import Connect4Model
+        from alpha_zero.agent.model_connect4 import Connect4Model
         model = Connect4Model(self.config)
         rc = self.config.resource
 
