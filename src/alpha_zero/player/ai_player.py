@@ -2,6 +2,7 @@ from alpha_zero.agent.player_connect4 import Connect4Player
 from alpha_zero.lib.model_helpler import load_best_model_weight
 from alpha_zero.config import PlayWithHumanConfig
 from alpha_zero.player.player_inherit_from import *
+
 class Alpha_Zero_Player(Player):
     def __init__(self,config,env,playing_as):  # env,player,agent inherited from Player
         Player.env=env

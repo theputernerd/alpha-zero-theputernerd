@@ -2,7 +2,8 @@ import enum
 import numpy as np
 
 from logging import getLogger
-
+from alpha_zero.env.env_inherit_from import Environment
+from copy import deepcopy,copy
 logger = getLogger(__name__)
 
 # noinspection PyArgumentList
@@ -14,26 +15,38 @@ class Player :
     white=1
     black=2
 
-class Connect4Env:  ##TODO: Inherit
+class Connect4Env(Environment):
     def __init__(self):
         self.board = None
-
-        self.turn = 0
-        self.done = False
-        self.winner = None  # type: Winner
-        self.resigned = False
-
+        Environment.width=7
+        Environment.height=6
+        Environment.n_cells=Environment.width*Environment.height
+        Environment.n_actions=Environment.width
+        Environment.name="Connect4_6x7"
+    def is_terminal(self):
+        return self.done
+    def get_result(self):
+        return self.winner
     def reset(self):
         self.board = []
-        for i in range(6):
+        for i in range(self.height):
             self.board.append([])
-            for j in range(7):
+            for j in range(self.width):
                 self.board[i].append(' ')
         self.turn = 0
         self.done = False
         self.winner = None
         self.resigned = False
         return self
+    def clone(self):
+        st=Connect4Env()
+        st.board = deepcopy(self.board)
+        st.turn = self.turn
+        st.done = self.done
+        st.winner = self.winner
+        st.resigned = self.resigned
+        st.name=self.name
+        return st
 
     def update(self, board):
         self.board = np.copy(board)
@@ -45,8 +58,8 @@ class Connect4Env:  ##TODO: Inherit
 
     def turn_n(self):
         turn = 0
-        for i in range(6):
-            for j in range(7):
+        for i in range(self.height):
+            for j in range(self.width):
                 if self.board[i][j] != ' ':
                     turn += 1
 
@@ -54,44 +67,58 @@ class Connect4Env:  ##TODO: Inherit
 
     def player_turn(self):
         if self.turn % 2 == 0:
-            return Player.white
+            return 1
         else:
-            return Player.black
+            return 2
 
     def step(self, action):
         if action is None:
             self._resigned()
             return self.board, {}
-
-        for i in range(6):
+        played=False
+        for i in range(self.height):
             if self.board[i][action] == ' ':
                 self.board[i][action] = ('X' if self.player_turn() == Player.white else 'O')
+                played=True
                 break
+        if not played:
+            assert False
 
         self.turn += 1
 
         self.check_for_fours()
 
-        if self.turn > 42:
+        if self.turn >= 42: #had to change this from > because it didn't detect draws immediately. Potentially resulting in
             self.done = True
             if self.winner is None:
                 self.winner = 3
 
         return self.board, {}
+    def get_legal_moves(self):
+        legals=self.legal_moves()
+        moves=np.nonzero(legals)
+        self.legalmoves=moves[0]
 
-    def legal_moves(self):
+        return moves[0]
+
+    def legal_moves(self): #TODO:Rename this to describe that it outputs a plane.
         legal = [0, 0, 0, 0, 0, 0, 0]
-        for j in range(7):
-            for i in range(6):
-                if self.board[i][j] == ' ':
-                    legal[j] = 1
-                    break
+        #with connect4 it the top cell is empty then its a valid move.
+        h=self.height-1
+        for j in range(self.width):
+            if self.board[h][j] == ' ':
+                legal[j] = 1
+        #for j in range(self.width):
+        #    for i in range(self.height):
+        #        if self.board[i][j] == ' ':
+        #            legal[j] = 1
+        #            break
 
         return legal
 
     def check_for_fours(self):
-        for i in range(6):
-            for j in range(7):
+        for i in range(self.height):
+            for j in range(self.width):
                 if self.board[i][j] != ' ':
                     # check if a vertical four-in-a-row starts at (i, j)
                     if self.vertical_check(i, j):
@@ -114,7 +141,7 @@ class Connect4Env:  ##TODO: Inherit
         four_in_a_row = False
         consecutive_count = 0
 
-        for i in range(row, 6):
+        for i in range(row, self.height):
             if self.board[i][col].lower() == self.board[row][col].lower():
                 consecutive_count += 1
             else:
@@ -123,9 +150,9 @@ class Connect4Env:  ##TODO: Inherit
         if consecutive_count >= 4:
             four_in_a_row = True
             if 'x' == self.board[row][col].lower():
-                self.winner = Player.white
+                self.winner = 1
             else:
-                self.winner = Player.black
+                self.winner = 2
 
         return four_in_a_row
 
@@ -133,7 +160,7 @@ class Connect4Env:  ##TODO: Inherit
         four_in_a_row = False
         consecutive_count = 0
 
-        for j in range(col, 7):
+        for j in range(col, self.width):
             if self.board[row][j].lower() == self.board[row][col].lower():
                 consecutive_count += 1
             else:
@@ -142,9 +169,9 @@ class Connect4Env:  ##TODO: Inherit
         if consecutive_count >= 4:
             four_in_a_row = True
             if 'x' == self.board[row][col].lower():
-                self.winner = Player.white
+                self.winner = 1
             else:
-                self.winner = Player.black
+                self.winner = 2
 
         return four_in_a_row
 
@@ -154,8 +181,8 @@ class Connect4Env:  ##TODO: Inherit
 
         consecutive_count = 0
         j = col
-        for i in range(row, 6):
-            if j > 6:
+        for i in range(row, self.height):
+            if j > self.height:
                 break
             elif self.board[i][j].lower() == self.board[row][col].lower():
                 consecutive_count += 1
@@ -166,14 +193,14 @@ class Connect4Env:  ##TODO: Inherit
         if consecutive_count >= 4:
             count += 1
             if 'x' == self.board[row][col].lower():
-                self.winner = Player.white
+                self.winner = 1
             else:
-                self.winner = Player.black
+                self.winner = 2
 
         consecutive_count = 0
         j = col
         for i in range(row, -1, -1):
-            if j > 6:
+            if j > self.height:
                 break
             elif self.board[i][j].lower() == self.board[row][col].lower():
                 consecutive_count += 1
@@ -184,9 +211,9 @@ class Connect4Env:  ##TODO: Inherit
         if consecutive_count >= 4:
             count += 1
             if 'x' == self.board[row][col].lower():
-                self.winner = Player.white
+                self.winner = 1
             else:
-                self.winner = Player.black
+                self.winner = 2
 
         if count > 0:
             four_in_a_row = True
@@ -195,17 +222,17 @@ class Connect4Env:  ##TODO: Inherit
 
     def _resigned(self):
         if self.player_turn() == Player.white:
-            self.winner = Player.white
+            self.winner = 1
         else:
-            self.winner = Player.black
+            self.winner = 2
         self.done = True
         self.resigned = True
 
     def black_and_white_plane(self):
         board_white = np.copy(self.board)
         board_black = np.copy(self.board)
-        for i in range(6):
-            for j in range(7):
+        for i in range(self.height):
+            for j in range(self.width):
                 if self.board[i][j] == ' ':
                     board_white[i][j] = 0
                     board_black[i][j] = 0
@@ -220,20 +247,24 @@ class Connect4Env:  ##TODO: Inherit
 
     def render(self):
         print("\nRound: " + str(self.turn))
-
-        for i in range(5, -1, -1):
+        line1=""
+        line2=""
+        for i in range(self.height-1, -1, -1):
             print("\t", end="")
-            for j in range(7):
+            for j in range(self.width):
                 print("| " + str(self.board[i][j]), end=" ")
             print("|")
-        print("\t  _   _   _   _   _   _   _ ")
-        print("\t  1   2   3   4   5   6   7 ")
+        for j in range(self.width):
+            line1+="_   "
+            line2+=f"{j}   "
+        print(f"\t  {line1}")
+        print(f"\t  {line2}")
 
         if self.done:
             print("Game Over!")
-            if self.winner == Player.white:
+            if self.winner == 1:
                 print("X is the winner")
-            elif self.winner == Player.black:
+            elif self.winner == 2:
                 print("O is the winner")
             else:
                 print("Game was a draw")

@@ -1,7 +1,15 @@
 class Player(object):
-    def __init__(self,env):
+    def __init__(self,env,playing_as,name,shortName=None):
         #This is the placeholder for all players
         self.env=env #this is the environment. It has predefined methods with the Player class calls.
+        self.playing_as=playing_as
+        self.name = name
+        if shortName==None:
+            self.shortName=name[0:5]
+        else:
+            self.shortName = shortName
+
+
     def get_move(self,board):
         description="You need to override the do_move method in player. It needs to return an integer representing the move chosen based on the given board."
         raise Exception('Player method not over-ridden',__file__,description)

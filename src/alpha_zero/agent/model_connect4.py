@@ -15,8 +15,9 @@ from keras.losses import mean_squared_error
 from keras.regularizers import l2
 
 from alpha_zero.config import Config
-
+import logging
 logger = getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
 class Connect4Model:

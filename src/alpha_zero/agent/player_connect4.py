@@ -13,8 +13,9 @@ from alpha_zero.env.connect4_env import Connect4Env
 CounterKey = namedtuple("CounterKey", "board next_player")
 QueueItem = namedtuple("QueueItem", "state future")
 HistoryItem = namedtuple("HistoryItem", "action policy values visit")
-
+import logging
 logger = getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 class Connect4Player:
     def __init__(self, config: Config, model, play_config=None):

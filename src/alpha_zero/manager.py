@@ -4,10 +4,11 @@ from logging import getLogger
 
 from .lib.logger import setup_logger
 from .config import Config
-
+import logging
 logger = getLogger(__name__)
+logger.setLevel(logging.INFO)
 
-CMD_LIST = ['self', 'opt', 'eval', 'play_gui','MCTS_Test']
+CMD_LIST = ['self', 'opt', 'eval', 'play_gui','h_v_mcts','ai_v_mcts']
 
 def create_parser():
     parser = argparse.ArgumentParser()
@@ -46,6 +47,12 @@ def start():
     elif args.cmd == 'play_gui':
         from .play_game import gui
         return gui.start(config)
+    elif args.cmd == 'h_v_mcts':
+        from .play_game import humanVMCTS
+        return humanVMCTS.start(config)
+    elif args.cmd == 'ai_v_mcts':
+        from .play_game import ai_v_mcts
+        return ai_v_mcts.start(config)
 
 
 

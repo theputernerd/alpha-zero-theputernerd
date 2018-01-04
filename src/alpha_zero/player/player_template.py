@@ -1,8 +1,9 @@
 from alpha_zero.player.player_inherit_from import Player
 
 class someNewPlayer(Player):
-    def __init__(self,env): #env inherited from Player
-        Player.env=env
+    def __init__(self,env,playing_as,name,shortName=None): #env inherited from Player
+        #Player.env=env
+        super().__init__(env,playing_as,name,shortName)
         #This is the placeholder for all players
         pass
 

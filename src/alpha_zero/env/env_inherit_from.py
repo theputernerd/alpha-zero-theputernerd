@@ -1,16 +1,30 @@
 import numpy as np
-class env(object):
-    def __init__(self):
-
-        self.board = None
+class Environment(object):
+    def __init__(self,width,height,n_inputs,n_actions,name=None):
+        self.name=name
+        self.board = None #the board input
         self.turn = 0
         self.done = False
-        self.winner = None  # type: Winner
-        self.resigned = False
-        self.x=7
-        self.y=6
-        self.n_inputs=None
-        self.n_outputs=None
+        self.winner = None  # 0 still playing, 1 p1, 2 p2, 3 draw
+        self.width=width
+        self.height=height
+        self.n_cells=n_inputs
+        self.n_actions=n_actions
+        self.state=None  # A single and complete representation of the state which allows it's full reconstruction
+                         # this could simple be a string containing all the class variables
+    def get_state(self):
+        description = "You need to override the get_state method in env. It returns a single object representing the full state."
+        raise Exception('method not over-ridden', __file__, description)
+    def get_result(self):
+        description = "You need to override the get_result method in env. It returns a single integer - 0 game still going, 1 p1wins,2p2wins 3 draw."
+        raise Exception('method not over-ridden', __file__, description)
+    def is_terminal(self):
+        description = "You need to override the is_terminal method in env. It returns a bool indicating if game is over. Also sets winner."
+        raise Exception('method not over-ridden', __file__, description)
+
+    def set_state(self):
+        description = "You need to override the setState method in env. It sets the environment based on a given state."
+        raise Exception('method not over-ridden', __file__, description)
 
     def reset(self):
         description = "You need to override the do_move method in env. It returns self."
@@ -23,7 +37,6 @@ class env(object):
     def turn_n(self):
         ##for connnect 4 this figures out whose turn it is - because the environment doesnt track who's turn it is.
         assert False
-
 
     def player_turn(self):
         return self.turn #how many turns have occured in the game
@@ -40,42 +53,9 @@ class env(object):
         return legal
 
 
-    def black_and_white_plane(self):
-        board_white = np.copy(self.board)
-        board_black = np.copy(self.board)
-        for i in range(self.y):
-            for j in range(self.x):
-                if self.board[i][j] == ' ':
-                    board_white[i][j] = 0
-                    board_black[i][j] = 0
-                elif self.board[i][j] == 'X':
-                    board_white[i][j] = 1
-                    board_black[i][j] = 0
-                else:
-                    board_white[i][j] = 0
-                    board_black[i][j] = 1
-
-        return np.array(board_white), np.array(board_black)
-
     def render(self):
-        print("\nRound: " + str(self.turn))
-
-        for i in range(5, -1, -1):
-            print("\t", end="")
-            for j in range(7):
-                print("| " + str(self.board[i][j]), end=" ")
-            print("|")
-        print("\t  _   _   _   _   _   _   _ ")
-        print("\t  1   2   3   4   5   6   7 ")
-
-        if self.done:
-            print("Game Over!")
-            if self.winner == 1:
-                print("X is the winner")
-            elif self.winner == 2:
-                print("O is the winner")
-            else : #TODO: self.winner ==3
-                print("Game was a draw")
+        description = "You need to override the render method in env. It renders the board."
+        raise Exception('method not over-ridden', __file__, description)
 
     @property
     def observation(self):

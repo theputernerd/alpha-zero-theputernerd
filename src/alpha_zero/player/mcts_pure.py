@@ -7,6 +7,7 @@ A pure implementation of the Monte Carlo Tree Search (MCTS)
 import numpy as np
 import copy 
 from operator import itemgetter
+from alpha_zero.player.player_inherit_from import Player
 
 def rollout_policy_fn(board):
     """rollout_policy_fn -- a coarse, fast version of policy_fn used in the rollout phase."""
@@ -34,12 +35,12 @@ class TreeNode(object):
         self._u = 0
         self._P = prior_p
 
-    def expand(self, action_priors):
+    def expand(self, action_prob):
         """Expand tree by creating new children.
         action_priors -- output from policy function - a list of tuples of actions
             and their prior probability according to the policy function.
         """
-        for action, prob in action_priors:
+        for action, prob in action_prob:
             if action not in self._children:
                 self._children[action] = TreeNode(self, prob)
 
@@ -90,7 +91,7 @@ class MCTS(object):
     """A simple implementation of Monte Carlo Tree Search.
     """
 
-    def __init__(self, policy_value_fn, c_puct=5, n_playout=10000):
+    def __init__(self, env, c_puct=5, n_playout=10000):
         """Arguments:
         policy_value_fn -- a function that takes in a board state and outputs a list of (action, probability)
             tuples and also a score in [-1, 1] (i.e. the expected value of the end game score from 
@@ -99,10 +100,10 @@ class MCTS(object):
             maximum-value policy, where a higher value means relying on the prior more
         """
         self._root = TreeNode(None, 1.0)
-        self._policy = policy_value_fn
+        #self._policy = policy_value_fn
         self._c_puct = c_puct
         self._n_playout = n_playout
-
+        self.env=env
     def _playout(self, state):
         """Run a single playout from the root to the leaf, getting a value at the leaf and
         propagating it back through its parents. State is modified in-place, so a copy must be
@@ -116,31 +117,47 @@ class MCTS(object):
 
                 break                
             # Greedily select next move.
-            action, node = node.select(self._c_puct)            
-            state.do_move(action)
+            action, node = node.select(self._c_puct)
+            self.env.do_move(action) #ToDO set the board to the corret starting position
 
-        action_probs, _ = self._policy(state)
+        avail_moves = self.env.get_legal_moves()
+        action_probs = zip(avail_moves,np.random.rand(len(avail_moves)))
+
+        #action_probs, _ = self._policy(state)
         # Check for end of game
-        end, winner = state.game_end()
-        if not end:
+        if self.env.done :
+            end=True
+            winner=self.env.winner
+        else:
             node.expand(action_probs)
+
+        #end, winner = state.game_end()
+        #if not end:
+        #    node.expand(action_probs)
         # Evaluate the leaf node by random rollout
         leaf_value = self._evaluate_rollout(state)
         # Update value and visit count of nodes in this traversal.
         node.update_recursive(-leaf_value)
 
-    def _evaluate_rollout(self, state, limit=1000):
+    def _evaluate_rollout(self,board,  game_move_limit=1000):
+
         """Use the rollout policy to play until the end of the game, returning +1 if the current
         player wins, -1 if the opponent wins, and 0 if it is a tie.
         """
-        player = state.get_current_player()
-        for i in range(limit):
-            end, winner = state.game_end()
-            if end:
+        player = self.env.player_turn()
+        for i in range(game_move_limit):
+            if self.env.done:
+                end = True
+                winner = self.env.winner
                 break
-            action_probs = rollout_policy_fn(state)
+
+            avail_moves=self.env.get_legal_moves()
+            probs = np.random.rand(len(avail_moves))
+            #action_probs = rollout_policy_fn(state)
+            action_probs=zip(avail_moves,probs)
             max_action = max(action_probs, key=itemgetter(1))[0]
-            state.do_move(max_action)
+            self.env.step(max_action)
+
         else:
             # If no break from the loop, issue a warning.
             print("WARNING: rollout reached move limit")
@@ -173,10 +190,12 @@ class MCTS(object):
     def __str__(self):
         return "MCTS"
 
-class MCTSPlayer(object):
+class MCTSPlayer(Player):
     """AI player based on MCTS"""
-    def __init__(self, c_puct=5, n_playout=2000):
-        self.mcts = MCTS(policy_value_fn, c_puct, n_playout)
+    def __init__(self,env, playing_as,n_playout=2000, c_puct=5):
+        super().__init__(env,playing_as)
+        self.mcts = MCTS(env, c_puct, n_playout)
+
     
     def set_player_ind(self, p):
         self.player = p
@@ -184,8 +203,9 @@ class MCTSPlayer(object):
     def reset_player(self):
         self.mcts.update_with_move(-1) 
 
-    def get_action(self, board):
-        sensible_moves = board.availables
+    def get_move(self, env):
+        board=env.board
+        sensible_moves = env.get_legal_moves()
         if len(sensible_moves) > 0:
             move = self.mcts.get_move(board)
             self.mcts.update_with_move(-1)
