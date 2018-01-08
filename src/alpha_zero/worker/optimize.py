@@ -7,7 +7,7 @@ import keras.backend as K
 import numpy as np
 from keras.optimizers import SGD
 
-from alpha_zero.agent.model_connect4 import Connect4Model, objective_function_for_policy, \
+from alpha_zero.agent.ai_agent import Ai_Agent, objective_function_for_policy, \
     objective_function_for_value
 from alpha_zero.config import Config
 from alpha_zero.lib import tf_util
@@ -28,7 +28,7 @@ def start(config: Config):
 class OptimizeWorker:
     def __init__(self, config: Config):
         self.config = config
-        self.model = None  # type: Connect4Model
+        self.model = None  # type: Ai_Agent
         self.loaded_filenames = set()
         self.loaded_data = {}
         self.dataset = None
@@ -37,7 +37,9 @@ class OptimizeWorker:
         self.stats={'total_steps':self.total_steps,}
 
     def start(self):
-        self.model = self.load_model()
+        #self.model = self.load_model()
+        self.model=Ai_Agent(self.config)
+        self.load_model_to_be_optimized()
         self.training()
 
     def training(self):
@@ -108,8 +110,7 @@ class OptimizeWorker:
         weight_path = os.path.join(model_dir, rc.next_generation_model_weight_filename)
         stats_path= os.path.join(model_dir, rc.next_generation_model_stats_filename)
 
-        self.model.save(config_path, weight_path)
-        self.save_stats(stats_path)
+        self.model.save(config_path, weight_path,stats_path)
 
 
 
@@ -131,11 +132,6 @@ class OptimizeWorker:
             return 0
         return len(self.dataset[0])
 
-    def save_stats(self,filename):
-        self.stats['total_steps']=self.total_steps
-
-        with open(filename, 'w') as f:
-            json.dump(self.stats, f)
 
     def load_stats(self,filename):
         try:
@@ -148,19 +144,15 @@ class OptimizeWorker:
             self.total_steps=self.stats['total_steps']
         pass
 
-    def load_model(self):
-        from alpha_zero.agent.model_connect4 import Connect4Model
-        model = Connect4Model(self.config)
+    def load_model_to_be_optimized(self):
         rc = self.config.resource
-
         dirs = get_next_generation_model_dirs(rc)
 
         if not dirs:
             logger.debug(f"loading best model")
-            if not load_best_model_weight(model):
+            if not load_best_model_weight(self.model):
                 raise RuntimeError(f"Best model can not loaded!")
-            stats_path = rc.model_best_stats_path
-            self.load_stats(stats_path)
+
         ###################
 
         else:

@@ -115,7 +115,7 @@ def GeUCTMove(rootstate, itermax, verbose=False):
 
 def MCTSBuild(rootnode, verbose=False) :
     #Builds the MCTS tree
-    rootnode.state.reset()
+    #rootnode.state.reset()
 
     node = rootnode
     #state = rootnode.state.Clone()

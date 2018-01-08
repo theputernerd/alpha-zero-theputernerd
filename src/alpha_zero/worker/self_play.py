@@ -25,7 +25,7 @@ class SelfPlayWorker:
 
         :param config:
         :param Connect4Env|None env:
-        :param alpha_zero.agent.model_connect4.Connect4Model|None model:
+        :param alpha_zero.agent.ai_agent.Ai_Agent|None model:
         """
         self.config = config
         self.model = model
@@ -99,9 +99,9 @@ class SelfPlayWorker:
         self.white.finish_game(-black_win)
 
     def load_model(self):
-        from alpha_zero.agent.model_connect4 import Connect4Model
+        from alpha_zero.agent.ai_agent import Ai_Agent
         from shutil import copyfile
-        model = Connect4Model(self.config)
+        model = Ai_Agent(self.config)
         if self.config.opts.new or not load_best_model_weight(model):
             model.build()
 
@@ -110,13 +110,19 @@ class SelfPlayWorker:
             #self.model_best_weight_path = os.path.join(self.model_dir, "model_best_weight.h5")
             #self.model_best_stats_path = os.path.join(self.model_dir, "model_best_stats.json"
 
-        try :
-            copyfile(self.config.resource.model_best_config_path,self.config.resource.history_best_dir+"\\"+self.config.resource.next_generation_model_config_filename)
-            copyfile(self.config.resource.model_best_weight_path,self.config.resource.history_best_dir+"\\"+self.config.resource.next_generation_model_weight_filename)
-            #copyfile(self.config.resource.model_best_stats_path,self.config.resource.history_best_dir+"\\"+self.config.resource.next_generation_model_stats_filename)
-        except(FileNotFoundError):
-            raise
-            pass
+            try :
+                copyfile(self.config.resource.model_best_config_path,self.config.resource.history_best_dir+"\\_0\\"+self.config.resource.model_name)
+                copyfile(self.config.resource.model_best_weight_path,self.config.resource.history_best_dir+"\\_0\\"+self.config.resource.model_weights_name)
+
+                self.model.stats['total_steps'] = 0
+                filename=self.config.resource.history_best_dir + "\\_0\\" + self.config.resource.model_stats_name
+                self.model.save_stats(filename)#create a stats filename
+
+
+                #copyfile(self.config.resource.model_best_stats_path,self.config.resource.history_best_dir+"\\"+self.config.resource.next_generation_model_stats_filename)
+            except(FileNotFoundError):
+                raise
+                pass
 
 
         return model

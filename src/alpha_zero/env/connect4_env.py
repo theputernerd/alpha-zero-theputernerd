@@ -23,6 +23,43 @@ class Connect4Env(Environment):
         Environment.n_cells=Environment.width*Environment.height
         Environment.n_actions=Environment.width
         Environment.name="Connect4_6x7"
+        self.h_idx=[]
+        self.v_idx=[]
+        self.d_idx=[]
+        self.winningMoves=[]
+        self._buildHoriz4()
+
+
+    def _buildHoriz4(self):
+        consecutive_count = 0
+        col=0
+        row=0
+        nInarow=4-1
+        for i in range(self.height):
+            for j in range(self.width):
+
+                if (i+nInarow)<self.height :
+                    idx=[(i,j),(i+1,j),(i+2,j),(i+3,j)]
+                    self.v_idx.append(idx)
+                    self.winningMoves.append(idx)
+                if (j+nInarow)<self.width :
+                    idx=[(i,j),(i,j+1),(i,j+2),(i,j+3)]
+                    self.h_idx.append(idx)
+                    self.winningMoves.append(idx)
+
+                if ((j+nInarow)<self.width) and (i+nInarow)<self.height:
+                    idx=[(i,j),(i+1,j+1),(i+2,j+2),(i+3,j+3)]
+                    self.d_idx.append(idx)
+                    self.winningMoves.append(idx)
+
+                if ((j - nInarow) >= 0) and (i + nInarow) < self.height:
+                    idx = [(i, j), (i + 1, j - 1), (i + 2, j - 2), (i + 3, j - 3)]
+                    self.d_idx.append(idx)
+                    self.winningMoves.append(idx)
+
+
+        #self.winningMoves=self.v_idx+self.h_idx+self.d_idx
+        pass
     def is_terminal(self):
         return self.done
     def get_result(self):
@@ -88,7 +125,7 @@ class Connect4Env(Environment):
 
         self.check_for_fours()
 
-        if self.turn >= 42: #had to change this from > because it didn't detect draws immediately. Potentially resulting in
+        if self.turn >= Environment.n_cells: #had to change this from > because it didn't detect draws immediately. Potentially resulting in
             self.done = True
             if self.winner is None:
                 self.winner = 3
@@ -102,7 +139,7 @@ class Connect4Env(Environment):
         return moves[0]
 
     def legal_moves(self): #TODO:Rename this to describe that it outputs a plane.
-        legal = [0, 0, 0, 0, 0, 0, 0]
+        legal = np.zeros(self.width)
         #with connect4 it the top cell is empty then its a valid move.
         h=self.height-1
         for j in range(self.width):
@@ -116,7 +153,29 @@ class Connect4Env(Environment):
 
         return legal
 
+    def check_equal(self,positions):
+        i,j=positions[0]
+        val=self.board[i][j]
+        if val == ' ': return False
+
+        for (h,w) in positions:
+            if self.board[h][w]!=val: return False
+
+        if 'X' == val:
+            self.winner = 1
+        else:
+            self.winner = 2
+        return True
+
     def check_for_fours(self):
+
+        for n in self.winningMoves:
+            self.done=self.check_equal(n)
+            if self.done :return
+        self.done=False
+        #[MCTSBuild(rootnode=rootnode) for _ in range(self.iterations)]
+        #self.done=self.check_equal(self.winningMoves[0])
+        return
         for i in range(self.height):
             for j in range(self.width):
                 if self.board[i][j] != ' ':

@@ -3,7 +3,7 @@ from logging import getLogger
 from random import random
 from time import sleep
 import contextlib
-from alpha_zero.agent.model_connect4 import Connect4Model
+from alpha_zero.agent.ai_agent import Ai_Agent
 from alpha_zero.agent.player_connect4 import Connect4Player
 from alpha_zero.config import Config
 from alpha_zero.env.connect4_env import Connect4Env
@@ -102,7 +102,7 @@ class EvaluateWorker:
         return ng_win, best_is_white
 
     def load_best_model(self):
-        model = Connect4Model(self.config)
+        model = Ai_Agent(self.config)
         load_best_model_weight(model)
         return model
 
@@ -117,7 +117,7 @@ class EvaluateWorker:
         model_dir = dirs[-1] if self.config.eval.evaluate_latest_first else dirs[0]
         config_path = os.path.join(model_dir, rc.next_generation_model_config_filename)
         weight_path = os.path.join(model_dir, rc.next_generation_model_weight_filename)
-        model = Connect4Model(self.config)
+        model = Ai_Agent(self.config)
         model.load(config_path, weight_path)
         return model, model_dir
 

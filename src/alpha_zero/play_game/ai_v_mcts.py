@@ -15,28 +15,31 @@ import time
 def start(config: Config):
     #env = Connect4Env().reset()
     #humanPlayer=Human_Player(env,playing_as=2)
+    PlayWithHumanConfig().update_play_config(config.play)
     env = Connect4Env().reset()
     alphaPlayer=Alpha_Zero_Player(config,env,2)
-    aiPlayer=MCTSPlayer(env,playing_as=1,iterations=1000)
+    its=2000
+    m_Player=MCTSPlayer(env,playing_as=1,iterations=its)
     games=AIwins=Mwins=draws=0
-    print("playing games")
+    print(f"playing games {its}")
     while True:
         env = Connect4Env().reset()
-        alphaPlayer.playing_as = 3 - aiPlayer.playing_as
+        alphaPlayer.playing_as = 3 - m_Player.playing_as
         while not env.done:
             t=env.player_turn()
-            if t == aiPlayer.playing_as:
+            if t == m_Player.playing_as:
                 #m=env.get_legal_moves()
 
                 print(": m",end='', flush=True)
                 with Timer() as t:
-                    action = aiPlayer.get_move(env.clone())
-                print(f"{action}({t.interval}s)",end='')
+                    action = m_Player.get_move(env.clone())
+                print(f"{action}({round(t.interval)}s)",end='')
 
             elif t ==alphaPlayer.playing_as:
                 print(": a",end='', flush=True)
-                action = alphaPlayer.get_move(env.clone())
-                print(f"{action}",end='')
+                with Timer() as t:
+                    action = alphaPlayer.get_move(env.clone())
+                print(f"{action}({round(t.interval,2)}s)",end='')
             else:
                 assert False #turn doesn't match a player.
             env.step(action)
@@ -48,7 +51,7 @@ def start(config: Config):
         if env.winner==alphaPlayer.playing_as:
             AIwins+=1
             print ("AI wins as ",end='')
-        elif env.winner==MCTSPlayer.playing_as:
+        elif env.winner==m_Player.playing_as:
             Mwins+=1
             print ("MCTS wins as ",end='')
 
@@ -63,9 +66,13 @@ def start(config: Config):
             print("X")
         elif env.winner == 2:
             print("O")
+        elif env.winner == 3:
+            p="OX"[alphaPlayer.playing_as-1]
+            print(p)
+
         print("----------------------------------------------------------")
         print(f"{AIwins},{Mwins},{draws},{games}. {(AIwins+draws)/games}")
         print("----------------------------------------------------------")
 
-        aiPlayer.playing_as = alphaPlayer.playing_as
+        m_Player.playing_as = alphaPlayer.playing_as
 

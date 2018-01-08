@@ -2,32 +2,51 @@ from alpha_zero.agent.player_connect4 import Connect4Player
 from alpha_zero.lib.model_helpler import load_best_model_weight
 from alpha_zero.config import PlayWithHumanConfig
 from alpha_zero.player.player_inherit_from import *
+from alpha_zero.agent.ai_agent import Ai_Agent
+from logging import getLogger
+logger = getLogger(__name__)
+
 
 class Alpha_Zero_Player(Player):
     def __init__(self,config,env,playing_as):  # env,player,agent inherited from Player
         Player.env=env
         PlayWithHumanConfig().update_play_config(config.play)
-        model = self._load_model(config)
+        self.model = Ai_Agent(config)
         self.config=config
-        self.player = Connect4Player(config, model)
+        self.player = Connect4Player(config, self.model)
         self.playing_as=playing_as
-
+        self.stats={}
+        self.name='alpha_zero_player'
+        self.shortName='alpha'
 
         pass
+
+    def load(self,config_path, weight_path,stats_path):
+        val=self.model.load(config_path, weight_path)
+
+        if val:
+            try:
+
+                self.stats=self.model.load_stats(stats_path)
+                logger.debug(f"stats loaded {stats_path}")
+            except:
+                logger.error(f"stats not loaded from {stats_path}")
+            #now load stats
+
+        return val
+
     # This is the placeholder for all players
     #
     def _load_model(self,config):
-        from alpha_zero.agent.model_connect4 import Connect4Model
-        model = Connect4Model(config)
-        if not load_best_model_weight(model):
+        self.model = Ai_Agent(config)
+        if not load_best_model_weight(self.model):
+
             raise RuntimeError("best model not found!")
-        return model
+        return self.model
 
     def get_move(self, env):
         action=self.player.action(board=env.board)
         return action
-        description = "You need to override the do_move method in player. It needs to return an integer representing the move chosen based on the given board."
-        raise Exception('Player method not over-ridden', __file__, description)
 
     def new_game(self):
         description = "You need to override the new_game method in player. It will be called when a new game is started, and can be used to signal to your player to reset."

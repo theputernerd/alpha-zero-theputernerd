@@ -52,6 +52,7 @@ def start():
         return humanVMCTS.start(config)
     elif args.cmd == 'ai_v_mcts':
         from .play_game import ai_v_mcts
+
         return ai_v_mcts.start(config)
 
 

@@ -9,7 +9,9 @@ def load_best_model_weight(model):
     :param alpha_zero.agent.model.ChessModel model:
     :return:
     """
-    return model.load(model.config.resource.model_best_config_path, model.config.resource.model_best_weight_path)
+    val=model.load(model.config.resource.model_best_config_path, model.config.resource.model_best_weight_path)
+
+    return val
 
 
 def save_as_best_model(model):

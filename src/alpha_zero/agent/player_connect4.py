@@ -101,8 +101,9 @@ class Connect4Player:
                 return 1
             elif env.winner == 2:
                 return -1
-            else: #draw should be winner=3
+            elif env.winner==3: #draw should be winner=3
                 return 0
+            else: assert False
 
         key = self.counter_key(env)
 

@@ -20,11 +20,13 @@ logger = getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
-class Connect4Model:
+class Ai_Agent:
     def __init__(self, config: Config):
         self.config = config
         self.model = None  # type: Model
         self.digest = None
+
+        self.stats={}
     def build(self):
         mc = self.config.model
         in_x = x = Input((2, 6, 7))  # [own(8x8), enemy(8x8)]
@@ -82,33 +84,50 @@ class Connect4Model:
     def load(self, config_path, weight_path):
 
         if os.path.exists(config_path) and os.path.exists(weight_path):
-            logger.debug(f"loading model from {config_path}")
+            logger.info(f"loading model from {config_path}")
             try:  ##TODO: THere might be a thread clash with the file if another thread is moving the file at the time it is trying to be loaded. Need to check a few different places
                 with open(config_path, "rt") as f:
                     self.model = Model.from_config(json.load(f))
             except:
-                logger.error("line 89 model_connect4.py!!!!!!!!!!!!!!!!!!!!!Error loading model file")
+                logger.error("line 89 ai_agent.py!!!!!!!!!!!!!!!!!!!!!Error loading model file")
             try:
 
                 self.model.load_weights(weight_path)
                 self.digest = self.fetch_digest(weight_path)
 
             except:
-                logger.error("line 95 model_connect4.py!!!!!!!!!!!!!!!!!!!Error loading weights")
+                logger.error("line 95 ai_agent.py!!!!!!!!!!!!!!!!!!!Error loading weights")
 
             logger.debug(f"loaded model digest = {self.digest}")
+
+
             return True
         else:
             logger.debug(f"model files does not exist at {config_path} and {weight_path}")
             return False
 
-    def save(self, config_path, weight_path):
+    def load_stats(self,filename):
+
+        with open(filename, 'r') as f:
+            self.stats=json.load( f)
+            return self.stats
+            pass
+
+    def save_stats(self,filename):
+        self.stats['total_steps']=self.total_steps
+
+        with open(filename, 'w') as f:
+            json.dump(self.stats, f)
+
+    def save(self, config_path, weight_path,stats_path):
         logger.debug(f"save model to {config_path}")
         with open(config_path, "wt") as f:
             json.dump(self.model.get_config(), f)
             self.model.save_weights(weight_path)
         self.digest = self.fetch_digest(weight_path)
         logger.debug(f"saved model digest {self.digest}")
+        self.save_stats(stats_path)
+
 
 
 def objective_function_for_policy(y_true, y_pred):

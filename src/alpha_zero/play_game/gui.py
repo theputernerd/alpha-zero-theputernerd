@@ -9,6 +9,8 @@ from alpha_zero.player.human import *
 logger = getLogger(__name__)
 
 def start(config: Config):
+    PlayWithHumanConfig().update_play_config(config.play)
+
     env = Connect4Env().reset()
     humanPlayer=Human_Player(env,playing_as=2)
     env = Connect4Env().reset()

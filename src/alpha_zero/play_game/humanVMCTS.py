@@ -11,11 +11,13 @@ from alpha_zero.lib.helpers import Timer
 logger = getLogger(__name__)
 
 def start(config: Config):
+    PlayWithHumanConfig().update_play_config(config.play)
     env = Connect4Env().reset()
-    humanPlayer=Human_Player(env,playing_as=2)
+    humanPlayer=Human_Player(env,playing_as=1)
     env = Connect4Env().reset()
     #aiPlayer=Alpha_Zero_Player(config,env,1)
-    aiPlayer=MCTSPlayer(env,playing_as=1,iterations=1000)
+    aiPlayer=MCTSPlayer(env,playing_as=2,iterations=1000)
+
     while True:
         env = Connect4Env().reset()
         humanPlayer.playing_as = 3 - aiPlayer.playing_as

@@ -11,7 +11,7 @@ def _data_dir():
 
 
 class Config:
-    def __init__(self, config_type="mini"):
+    def __init__(self, config_type="normal"):
         self.opts = Options()
         self.resource = ResourceConfig()
 
@@ -26,6 +26,7 @@ class Config:
         self.play_data = c.PlayDataConfig()
         self.trainer = c.TrainerConfig()
         self.eval = c.EvaluateConfig()
+
         self.n_labels = 7
 
 
@@ -38,15 +39,18 @@ class ResourceConfig:
         self.project_dir = os.environ.get("PROJECT_DIR", _project_dir())
         self.data_dir = os.environ.get("DATA_DIR", _data_dir())
         self.model_dir = os.environ.get("MODEL_DIR", os.path.join(self.data_dir, "model"))
-        self.model_best_config_path = os.path.join(self.model_dir, "model_best_config.json")
-        self.model_best_weight_path = os.path.join(self.model_dir, "model_best_weight.h5")
-        self.model_best_stats_path = os.path.join(self.model_dir, "model_best_stats.json")
+        self.model_name="model_config.json"
+        self.model_weights_name="model_weight.h5"
+        self.model_stats_name="model_stats.json"
+        self.model_best_config_path = os.path.join(self.model_dir, self.model_name)
+        self.model_best_weight_path = os.path.join(self.model_dir, self.model_weights_name)
+        self.model_best_stats_path = os.path.join(self.model_dir, self.model_stats_name)
 
         self.next_generation_model_dir = os.path.join(self.model_dir, "next_generation")
         self.next_generation_model_dirname_tmpl = "model_%s"
-        self.next_generation_model_config_filename = "model_config.json"
-        self.next_generation_model_weight_filename = "model_weight.h5"
-        self.next_generation_model_stats_filename = "model_stats.json"
+        #self.next_generation_model_config_filename = self.model_name
+        #self.next_generation_model_weight_filename = self.model_weights_name
+        #self.next_generation_model_stats_filename = self.model_stats_name
         self.play_data_dir = os.path.join(self.data_dir, "play_data")
         self.play_data_filename_tmpl = "play_%s.json"
 
@@ -66,11 +70,11 @@ class ResourceConfig:
 
 class PlayWithHumanConfig:
     def __init__(self):
-        self.simulation_num_per_move = 50
-        self.thinking_loop = 3
+        self.simulation_num_per_move = 500
+        self.thinking_loop = 2
         self.logging_thinking = True
         self.c_puct = 2
-        self.parallel_search_num = 4
+        self.parallel_search_num = 32
         self.noise_eps = 0
         self.change_tau_turn = 0
         self.resign_threshold = None
@@ -92,8 +96,8 @@ class PlayWithHumanConfig:
 
 class PlayVMCTSConfig:
     def __init__(self):
-        self.simulation_num_per_move = 50
-        self.thinking_loop = 3
+        self.simulation_num_per_move = 100
+        self.thinking_loop = 10
         self.logging_thinking = True
         self.c_puct = 2
         self.parallel_search_num = 4
