@@ -21,7 +21,7 @@ def start(config: Config):
     alphaPlayer=Alpha_Zero_Player(config,env,playing_as=1)
     alphaPlayer.load_best_model(config)
     its=1000
-    m_Player=MCTSPlayer(env,playing_as=1,iterations=its)
+    m_Player=MCTSPlayer(env,playing_as=2,iterations=its)
     games=AIwins=Mwins=draws=0
     print(f"playing games {its}")
     env = Connect4Env()

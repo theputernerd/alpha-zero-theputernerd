@@ -291,7 +291,7 @@ def start(config: Config):
             modelweightsname = config.resource.next_generation_model_weight_filename
             modlestatsname = config.resource.next_generation_model_stats_filename
             """
-            basefolders=[config.resource.history_best_dir,config.resource.history_other_dir]
+            #basefolders=[config.resource.history_best_dir,config.resource.history_other_dir]
             basefolders=[config.resource.history_best_dir] #TODO: decide if this should test best or all
 
             folders=[]
@@ -316,7 +316,7 @@ def start(config: Config):
                 key = hpl.split("_")[-1]
 
                 if (key in perfDict):
-                    hpl = random.choice(folder)
+                    hpl = rnd.choice(folder)
                     print("-----RND: " + str(hpl))
                     addTowinRates = False
                 else:

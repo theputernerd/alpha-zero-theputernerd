@@ -74,7 +74,7 @@ class EvaluateWorker:
                 break
 
         l = len(results)
-        winning_rate = 0 if l > 0 else sum(results) / l  # TODO: Check this for an error. I got  a divide by zero error.
+        winning_rate = 0 if l == 0 else (sum(results) / l)  # TODO: Check this for an error. I got  a divide by zero error.
         logger.debug(f"winning rate {winning_rate*100:.1f}%")
         return winning_rate >= self.config.eval.replace_rate
 
@@ -145,9 +145,9 @@ class EvaluateWorker:
 
     def remove_model(self, model_dir,moveToDir=None): #historyDir if you want to retain this model.
         rc = self.config.resource
-        config_path = os.path.join(model_dir, rc.next_generation_model_config_filename)
-        weight_path = os.path.join(model_dir, rc.next_generation_model_weight_filename)
-        stats_path=os.path.join(model_dir, rc.next_generation_model_stats_filename)
+        config_path = os.path.join(model_dir, rc.model_name)
+        weight_path = os.path.join(model_dir, rc.model_weights_name)
+        stats_path = os.path.join(model_dir, rc.model_stats_name)
         if moveToDir!= None :
             modelName=os.path.basename(os.path.normpath(model_dir))
             moveToDir=os.path.abspath(moveToDir+"\\"+modelName)

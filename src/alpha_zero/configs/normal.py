@@ -7,9 +7,8 @@ class EvaluateConfig:
         self.play_config.thinking_loop = 2
         self.play_config.c_puct = 1
         self.play_config.change_tau_turn = 0
-        self.play_config.noise_eps = 0   #TODO: consider using small amount of noise to allow for variance in opening moves for a more comprehensive test
+        self.play_config.noise_eps = 0.1   #TODO: consider using small amount of noise to allow for variance in opening moves for a more comprehensive test
         self.evaluate_latest_first = True
-
 
 class PlayDataConfig:
     def __init__(self):
