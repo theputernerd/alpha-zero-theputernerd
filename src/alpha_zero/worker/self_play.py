@@ -34,9 +34,14 @@ class SelfPlayWorker:
         self.white = None  # type: Connect4Player
         self.buffer = []
 
+        os.makedirs(self.config.resource.history_best_dir+"\\_0\\",exist_ok=True)
+
+
     def start(self):
         if self.model is None:
+
             self.model = self.load_model()
+
 
         self.buffer = []
         idx = 1
@@ -106,6 +111,8 @@ class SelfPlayWorker:
             model.build()
 
             save_as_best_model(model)
+            stats = {}
+            stats['total_steps'] = 0
             #self.model_best_config_path = os.path.join(self.model_dir, "model_best_config.json")
             #self.model_best_weight_path = os.path.join(self.model_dir, "model_best_weight.h5")
             #self.model_best_stats_path = os.path.join(self.model_dir, "model_best_stats.json"
@@ -113,10 +120,10 @@ class SelfPlayWorker:
             try :
                 copyfile(self.config.resource.model_best_config_path,self.config.resource.history_best_dir+"\\_0\\"+self.config.resource.model_name)
                 copyfile(self.config.resource.model_best_weight_path,self.config.resource.history_best_dir+"\\_0\\"+self.config.resource.model_weights_name)
+                copyfile(self.config.resource.model_best_stats_path,self.config.resource.history_best_dir+"\\_0\\"+self.config.resource.model_stats_name)
 
-                self.model.stats['total_steps'] = 0
-                filename=self.config.resource.history_best_dir + "\\_0\\" + self.config.resource.model_stats_name
-                self.model.save_stats(filename)#create a stats filename
+                stats['total_steps'] = 0
+                #filename=self.config.resource.history_best_dir + "\\_0\\" + self.config.resource.model_stats_name
 
 
                 #copyfile(self.config.resource.model_best_stats_path,self.config.resource.history_best_dir+"\\"+self.config.resource.next_generation_model_stats_filename)

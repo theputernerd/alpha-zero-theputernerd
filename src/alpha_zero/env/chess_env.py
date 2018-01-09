@@ -34,7 +34,6 @@ class ChessEnv:
         self.num_halfmoves = 0
         self.winner = None
         self.resigned = False
-        return self
 
     def update(self, board):
         self.board = chess.Board(board)

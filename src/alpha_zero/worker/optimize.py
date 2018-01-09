@@ -28,7 +28,7 @@ def start(config: Config):
 class OptimizeWorker:
     def __init__(self, config: Config):
         self.config = config
-        self.model = None  # type: Ai_Agent
+        self.ai_agent = None  # type: Ai_Agent
         self.loaded_filenames = set()
         self.loaded_data = {}
         self.dataset = None
@@ -38,7 +38,7 @@ class OptimizeWorker:
 
     def start(self):
         #self.model = self.load_model()
-        self.model=Ai_Agent(self.config)
+        self.ai_agent=Ai_Agent(self.config)
         self.load_model_to_be_optimized()
         self.training()
 
@@ -69,7 +69,7 @@ class OptimizeWorker:
     def train_epoch(self, epochs):
         tc = self.config.trainer
         state_ary, policy_ary, z_ary = self.dataset
-        self.model.model.fit(state_ary, [policy_ary, z_ary],
+        self.ai_agent.model.fit(state_ary, [policy_ary, z_ary],
                              batch_size=tc.batch_size,
                              epochs=epochs)
         steps = (state_ary.shape[0] // tc.batch_size) * epochs
@@ -78,7 +78,7 @@ class OptimizeWorker:
     def compile_model(self):
         self.optimizer = SGD(lr=1e-2, momentum=0.9)
         losses = [objective_function_for_policy, objective_function_for_value]
-        self.model.model.compile(optimizer=self.optimizer, loss=losses)
+        self.ai_agent.model.compile(optimizer=self.optimizer, loss=losses)
 
     def update_learning_rate(self, total_steps):
         # The deepmind paper says
@@ -106,11 +106,11 @@ class OptimizeWorker:
         model_id = datetime.now().strftime("%Y%m%d-%H%M%S.%f")+steps
         model_dir = os.path.join(rc.next_generation_model_dir, rc.next_generation_model_dirname_tmpl % model_id)
         os.makedirs(model_dir, exist_ok=True)
-        config_path = os.path.join(model_dir, rc.next_generation_model_config_filename)
-        weight_path = os.path.join(model_dir, rc.next_generation_model_weight_filename)
-        stats_path= os.path.join(model_dir, rc.next_generation_model_stats_filename)
+        config_path = os.path.join(model_dir, rc.model_name)
+        weight_path = os.path.join(model_dir, rc.model_weights_name)
+        stats_path= os.path.join(model_dir, rc.model_stats_name)
 
-        self.model.save(config_path, weight_path,stats_path)
+        self.ai_agent.save(config_path, weight_path,stats_path)
 
 
 
@@ -150,7 +150,7 @@ class OptimizeWorker:
 
         if not dirs:
             logger.debug(f"loading best model")
-            if not load_best_model_weight(self.model):
+            if not load_best_model_weight(self.ai_agent):
                 raise RuntimeError(f"Best model can not loaded!")
 
         ###################
@@ -159,13 +159,13 @@ class OptimizeWorker:
             #TODO: Why does this load the latest and not the best?
             latest_dir = dirs[-1]
             logger.debug(f"loading latest model")
-            config_path = os.path.join(latest_dir, rc.next_generation_model_config_filename)
-            weight_path = os.path.join(latest_dir, rc.next_generation_model_weight_filename)
-            stats_path=os.path.join(latest_dir, rc.next_generation_model_stats_filename)
-            model.load(config_path, weight_path)
+            config_path = os.path.join(latest_dir, rc.model_name)
+            weight_path = os.path.join(latest_dir, rc.model_weights_name)
+            stats_path=os.path.join(latest_dir, rc.model_stats_name)
+            self.ai_agent.load(config_path, weight_path)
             self.load_stats(stats_path)
 
-        return model
+        return self.ai_agent
 
     def load_play_data(self):
         filenames = get_game_data_filenames(self.config.resource)

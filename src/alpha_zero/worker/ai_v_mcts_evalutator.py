@@ -44,8 +44,8 @@ def play_Games(game,MCTSPlayer,AIPlayer,ngames=1,printBoard=True) :
         MCTSPlayer.playing_as = AIPlayer.playing_as
         AIPlayer.playing_as = 3 - MCTSPlayer.playing_as
 
-        env = game.reset()  #TODO: have the environment reset without creating a new object
-        winner=playOneGame(env,AIPlayer,MCTSPlayer)
+        game.reset()  #TODO: have the environment reset without creating a new object
+        winner=playOneGame(game,AIPlayer,MCTSPlayer)
         totalgamesPlayed+=1
 
         if (printBoard):
@@ -255,7 +255,8 @@ def GetResultvsAgent(config,game,ai_model_folder,iterations,ngames=30): #this an
 def start(config: Config):
 
     PlayWithHumanConfig().update_play_config(config.play)
-    env = Connect4Env().reset()
+    env = Connect4Env()
+    env.reset()
     complete={} #keeps track of which AI weights have been tested.
     iterations = [100,500,1000,5000]
     ngames = 30

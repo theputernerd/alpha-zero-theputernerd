@@ -33,8 +33,17 @@ class EvaluateWorker:
         self.best_model = self.load_best_model()
         while True:
             ng_model, model_dir = self.load_next_generation_model()
-            logger.debug(f"start evaluate model {model_dir}")
-            ng_is_great = self.evaluate_model(ng_model)
+            if ng_model.model!=None:
+                logger.debug(f"start evaluate model {model_dir}")
+                ng_is_great = self.evaluate_model(ng_model)
+            else:
+                logger.error(f"Couldn't Load model {model_dir}")
+                if os.listdir(model_dir) == []:
+                    logger.error(f"directory is empty. Removing.")
+                    self.remove_model(model_dir)
+
+                    #check if directory is empty (this could occur if the optimize worker fails
+
 
             if ng_is_great:
                 logger.debug(f"New Model become best model: {model_dir}")
@@ -70,8 +79,8 @@ class EvaluateWorker:
         return winning_rate >= self.config.eval.replace_rate
 
     def play_game(self, best_model, ng_model):
-        env = Connect4Env().reset()
-
+        env = Connect4Env()
+        env.reset()
         best_player = Connect4Player(self.config, best_model, play_config=self.config.eval.play_config)
         ng_player = Connect4Player(self.config, ng_model, play_config=self.config.eval.play_config)
         best_is_white = random() < 0.5
@@ -115,11 +124,14 @@ class EvaluateWorker:
             logger.info(f"There is no next generation model to evaluate")
             sleep(60)
         model_dir = dirs[-1] if self.config.eval.evaluate_latest_first else dirs[0]
-        config_path = os.path.join(model_dir, rc.next_generation_model_config_filename)
-        weight_path = os.path.join(model_dir, rc.next_generation_model_weight_filename)
-        model = Ai_Agent(self.config)
-        model.load(config_path, weight_path)
-        return model, model_dir
+        config_path = os.path.join(model_dir, rc.model_name)
+        weight_path = os.path.join(model_dir, rc.model_weights_name)
+        stats_path = os.path.join(model_dir, rc.model_stats_name)
+
+        ai_agent = Ai_Agent(self.config)
+        ai_agent.load(config_path, weight_path)
+
+        return ai_agent, model_dir
 
     def copyDirectory(self,src, dest):
         try:

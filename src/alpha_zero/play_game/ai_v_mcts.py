@@ -16,14 +16,18 @@ def start(config: Config):
     #env = Connect4Env().reset()
     #humanPlayer=Human_Player(env,playing_as=2)
     PlayWithHumanConfig().update_play_config(config.play)
-    env = Connect4Env().reset()
-    alphaPlayer=Alpha_Zero_Player(config,env,2)
-    its=2000
+    env = Connect4Env()
+    env.reset()
+    alphaPlayer=Alpha_Zero_Player(config,env,playing_as=1)
+    alphaPlayer.load_best_model(config)
+    its=1000
     m_Player=MCTSPlayer(env,playing_as=1,iterations=its)
     games=AIwins=Mwins=draws=0
     print(f"playing games {its}")
+    env = Connect4Env()
+
     while True:
-        env = Connect4Env().reset()
+        env.reset()
         alphaPlayer.playing_as = 3 - m_Player.playing_as
         while not env.done:
             t=env.player_turn()

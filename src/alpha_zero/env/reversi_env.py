@@ -29,7 +29,6 @@ class ReversiEnv:
         self.turn = 0
         self.done = False
         self.winner = None
-        return self
 
     def update(self, black, white, next_player):
         self.board = Board(black, white)

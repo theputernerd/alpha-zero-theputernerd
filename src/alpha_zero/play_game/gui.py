@@ -11,13 +11,15 @@ logger = getLogger(__name__)
 def start(config: Config):
     PlayWithHumanConfig().update_play_config(config.play)
 
-    env = Connect4Env().reset()
+    env = Connect4Env()
+    env.reset()
     humanPlayer=Human_Player(env,playing_as=2)
     env = Connect4Env().reset()
     aiPlayer=Alpha_Zero_Player(config,env,1)
 
     while True:
-        env = Connect4Env().reset()
+        env = Connect4Env()
+        env.reset()
         humanPlayer.playing_as = 3 - aiPlayer.playing_as
         while not env.done:
             t=env.player_turn()

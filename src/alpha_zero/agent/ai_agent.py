@@ -25,8 +25,10 @@ class Ai_Agent:
         self.config = config
         self.model = None  # type: Model
         self.digest = None
-
+        self.total_steps=0
         self.stats={}
+        self.stats['total_steps'] = 0
+
     def build(self):
         mc = self.config.model
         in_x = x = Input((2, 6, 7))  # [own(8x8), enemy(8x8)]
@@ -114,6 +116,7 @@ class Ai_Agent:
             pass
 
     def save_stats(self,filename):
+
         self.stats['total_steps']=self.total_steps
 
         with open(filename, 'w') as f:

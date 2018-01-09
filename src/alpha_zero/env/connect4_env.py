@@ -17,7 +17,7 @@ class Player :
 
 class Connect4Env(Environment):
     def __init__(self):
-        self.board = None
+        self.board = []
         Environment.width=7
         Environment.height=6
         Environment.n_cells=Environment.width*Environment.height
@@ -28,7 +28,13 @@ class Connect4Env(Environment):
         self.d_idx=[]
         self.winningMoves=[]
         self._buildHoriz4()
-
+        self.board = []
+        for i in range(self.height):
+            self.board.append([])
+            for j in range(self.width):
+                self.board[i].append(' ')
+        self.boardInit=deepcopy(self.board)
+        pass
 
     def _buildHoriz4(self):
         consecutive_count = 0
@@ -65,16 +71,11 @@ class Connect4Env(Environment):
     def get_result(self):
         return self.winner
     def reset(self):
-        self.board = []
-        for i in range(self.height):
-            self.board.append([])
-            for j in range(self.width):
-                self.board[i].append(' ')
+        self.board=deepcopy(self.boardInit)##
         self.turn = 0
         self.done = False
         self.winner = None
         self.resigned = False
-        return self
     def clone(self):
         st=Connect4Env()
         st.board = deepcopy(self.board)
@@ -86,7 +87,7 @@ class Connect4Env(Environment):
         return st
 
     def update(self, board):
-        self.board = np.copy(board)
+        self.board = deepcopy(board)
         self.turn = self.turn_n()
         self.done = False
         self.winner = None

@@ -6,7 +6,6 @@ import asyncio
 
 import numpy as np
 
-from alpha_zero.agent.api_connect4 import Connect4ModelAPI
 from alpha_zero.config import Config
 from alpha_zero.env.connect4_env import Connect4Env
 
@@ -18,12 +17,12 @@ logger = getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 class Connect4Player:
-    def __init__(self, config: Config, model, play_config=None):
+    def __init__(self, config: Config, ai_agent, play_config=None):
 
         self.config = config
-        self.model = model
+        self.ai_agent = ai_agent
         self.play_config = play_config or self.config.play
-        self.api = Connect4ModelAPI(self.config, self.model)
+        #self.api = Connect4ModelAPI(self.config, self.model)
 
         self.labels_n = config.n_labels
         self.var_n = defaultdict(lambda: np.zeros((self.labels_n,)))
@@ -42,6 +41,18 @@ class Connect4Player:
 
         self.thinking_history = {}  # for fun
 
+    def notAsyncpredict(self, x):
+        assert x.ndim in (3, 4)
+        assert x.shape == (2, 6, 7) or x.shape[1:] == (2, 6, 7)
+        orig_x = x
+        if x.ndim == 3:
+            x = x.reshape(1, 2, 6, 7)
+        policy, value = self.ai_agent.model.predict_on_batch(x)
+
+        if orig_x.ndim == 3:
+            return policy[0], value[0]
+        else:
+            return policy, value
     def action(self, board):
 
         env = Connect4Env().update(board)
@@ -172,7 +183,7 @@ class Connect4Player:
             item_list = [q.get_nowait() for _ in range(q.qsize())]  # type: list[QueueItem]
             # logger.debug(f"predicting {len(item_list)} items")
             data = np.array([x.state for x in item_list])
-            policy_ary, value_ary = self.api.predict(data)
+            policy_ary, value_ary = self.notAsyncpredict(data)
             for p, v, item in zip(policy_ary, value_ary, item_list):
                 item.future.set_result((p, v))
 
