@@ -7,7 +7,7 @@ from .config import Config
 import logging
 logger = getLogger(__name__)
 logger.setLevel(logging.INFO)
-
+import os
 CMD_LIST = ['self', 'opt', 'eval', 'play_gui','h_v_mcts','ai_v_mcts']
 
 def create_parser():
@@ -22,7 +22,8 @@ def setup(config: Config, args):
     config.opts.new = args.new
     if args.total_step is not None:
         config.trainer.start_total_steps = args.total_step
-    config.resource.create_directories()
+    os.makedirs(config.resource.log_dir,exist_ok=True)
+
     setup_logger(config.resource.main_log_path)
 
 def start():

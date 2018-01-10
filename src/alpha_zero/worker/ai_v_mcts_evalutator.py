@@ -95,8 +95,6 @@ import json
 import shutil
 import contextlib
 import csv
-tempFolder = os.path.abspath('../../../temp')
-resultsFolder=os.path.abspath('../../../results')
 
 def play_Games(game,MCTSPlayer : MCTSPlayer,AIPlayer:Alpha_Zero_Player,ngames=30,printBoard=True) :
     #this demonstrates who you would play two players against each other.
@@ -266,8 +264,7 @@ def start(config: Config):
     iteration_level=0
     perfDict = {}  # TODO Save the performance dictionary so it can be reloaded anytime.
 
-    os.makedirs(tempFolder, exist_ok=True)
-    os.makedirs(resultsFolder, exist_ok=True)
+
     playLatestOnly=False
     while True :
         played = False  # flag indicates if a game was played - in case all files have been analysed.

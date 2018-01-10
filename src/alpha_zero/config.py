@@ -1,5 +1,6 @@
 import os
-
+import time
+import errno
 
 def _project_dir():
     d = os.path.dirname
@@ -56,16 +57,52 @@ class ResourceConfig:
 
         self.history_best_dir=os.path.join(self.model_dir,"history_best")
         self.history_other_dir=os.path.join(self.model_dir,"history_other")
-
+        self.zeroFolder=self.history_best_dir+"\\_0\\"
+        self.tempFolder = os.path.abspath('../../temp')
+        self.resultsFolder = os.path.abspath('../../results')
         self.log_dir = os.path.join(self.project_dir, "logs")
         self.main_log_path = os.path.join(self.log_dir, "main.log")
+        self.maxFilestoTrainWith=50  #there is 100 games per file. #this reduces training time. For small values do only 1 epoch
+        self.min_data_size_to_learn = 5000 #make sure there is enough data in each file to reach this number
 
-    def create_directories(self):
-        dirs = [self.project_dir, self.data_dir, self.model_dir, self.play_data_dir, self.log_dir,
-                self.next_generation_model_dir,self.history_best_dir,self.history_other_dir]
-        for d in dirs:
-            if not os.path.exists(d):
-                os.makedirs(d)
+
+
+    def create_directories(self,wait=True):
+        #why is this so complex? So the user can decide if they want to reset everything, in case restart is unintentional.
+        #to reset they just need to delete the folders. If it is not supposed to be a new run then thy can escapre the program.
+        #you should only call this if the model has not loaded for some reason.
+
+        waiting= True
+        printBool=True
+        hadToCreateDirs=False
+        while waiting:
+            try:
+                dirs = [self.tempFolder, self.resultsFolder, self.zeroFolder,
+                        self.play_data_dir,
+                        self.next_generation_model_dir, self.history_other_dir]#folders further back are automatically created.
+                for d in dirs:
+                    os.makedirs(d,exist_ok=False)
+                hadToCreateDirs = True
+                print("dirs Made")
+                waiting=False
+            except OSError as exc:
+                if exc.errno != errno.EEXIST:
+                    raise
+                if not wait :
+                    waiting=False
+                else:
+                    if printBool:
+                        print("Error config.py line 82. These directories cannot exist, delete them to start training. Sleeping until you do ")
+                        print("Be careful you only delete the existing ones and not ones I create after you have removed them. ")
+                        mDirs  = [self.tempFolder, self.resultsFolder, self.data_dir]
+
+                        for d in mDirs:
+                            print (str(d))
+
+                        printBool=False
+
+                    time.sleep(20)
+        return hadToCreateDirs
 
 
 class PlayWithHumanConfig:
