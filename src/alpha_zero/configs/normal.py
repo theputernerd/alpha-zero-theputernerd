@@ -1,19 +1,18 @@
 class EvaluateConfig:
     def __init__(self):
-        self.game_num = 20  # 400
-        self.replace_rate = 0.55
+        self.game_num = 21  # 400
+        self.replace_rate = 0.51
         self.play_config = PlayConfig()
         self.play_config.simulation_num_per_move = 25
         self.play_config.thinking_loop = 2
         self.play_config.c_puct = 1
         self.play_config.change_tau_turn = 0
-        self.play_config.noise_eps = 0.1   #TODO: consider using small amount of noise to allow for variance in opening moves for a more comprehensive test
-        self.evaluate_latest_first = True
-
+        self.play_config.noise_eps = 0.001   #TODO: consider using small amount of noise to allow for variance in opening moves for a more comprehensive test
+        self.evaluate_latest_first = False
 class PlayDataConfig:
     def __init__(self):
-        self.nb_game_in_file = 100
-        self.max_file_num = 100  # 5000
+        self.nb_game_in_file = 50
+        self.max_file_num = 1000  # 5000
 
 
 class PlayConfig:
@@ -35,10 +34,12 @@ class PlayConfig:
 class TrainerConfig:
     def __init__(self):
         self.batch_size = 1024  # 2048
-        self.epoch_to_checkpoint = 1
+        self.epoch_to_checkpoint = 2
         self.start_total_steps = 0
         self.save_model_steps = 150
         self.load_data_steps = 150
+        self.buffer_file_remove_prob=.01
+
 
 
 class ModelConfig:

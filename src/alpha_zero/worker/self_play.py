@@ -10,14 +10,22 @@ from alpha_zero.lib import tf_util
 from alpha_zero.lib.data_helper import get_game_data_filenames, write_game_data_to_file
 from alpha_zero.lib.model_helpler import load_best_model_weight, save_as_best_model, \
     reload_best_model_weight_if_changed
+import psutil,os
+
 import random
 logger = getLogger(__name__)
 import contextlib
-
+import copy
+import numpy as np
+import tensorflow as tf
 
 def start(config: Config):
-    tf_util.set_session_config(per_process_gpu_memory_fraction=0.2)
-    return SelfPlayWorker(config, env=Connect4Env()).start()
+    p = psutil.Process(os.getpid())
+    p.nice(psutil.BELOW_NORMAL_PRIORITY_CLASS)
+    with tf.device('/cpu:0'):
+        tf_util.set_session_config(per_process_gpu_memory_fraction=0.1)
+
+        return SelfPlayWorker(config, env=Connect4Env()).start()
 
 
 class SelfPlayWorker:
@@ -42,56 +50,115 @@ class SelfPlayWorker:
             self.ai_agent = self.load_model()
 
         self.buffer = []
-        idx = 1
+        idx = self.ai_agent.stats["total_steps"]
 
         if self.newRun :
             full=False
+            moves=[]
             while not full:
                 self.env.reset()
-                full=self.start_rnd_game(idx)
+                moves+=self.start_rnd_game(idx)
                 logger.debug(f"game {idx} "
                              f"turn={self.env.turn}:{self.env.observation} - Winner:{self.env.winner}")
                 idx += 1
+                if len(moves)>(self.config.resource.min_data_size_to_learn*1.2):
+                    full=True
+                    moves=[]
         logger.info(f"Now starting self play")
+
         while True:
+            self.one_round_of_self_play()
+            reload_best_model_weight_if_changed(self.ai_agent)
+
+            #start_time = time()
+            #env = self.start_game(idx)
+            #end_time = time()
+            #logger.debug(f"game {idx} time={end_time - start_time} sec, "
+            #             f"turn={env.turn}:{env.observation} - Winner:{env.winner}")
+            #if (idx % self.config.play_data.nb_game_in_file) == 0:
+            #    reload_best_model_weight_if_changed(self.ai_agent)
+            #idx += 1
+    def one_round_of_self_play(self,ai_Agent=None):
+        if ai_Agent==None:
+            ai_Agent=self.ai_agent
+
+        for i in range(self.config.play_data.nb_game_in_file):
+
             start_time = time()
-            env = self.start_game(idx)
+            self.env=Connect4Env()
+            env = self.start_game(i+1,ai_Agent,env=Connect4Env())  ###TODO: THIS IS NOT GENERIC BUT CONNECT4 SPEFICIC
             end_time = time()
-            logger.debug(f"game {idx} time={end_time - start_time} sec, "
+            logger.debug(f"game {i} time={end_time - start_time} sec, "
                          f"turn={env.turn}:{env.observation} - Winner:{env.winner}")
-            if (idx % self.config.play_data.nb_game_in_file) == 0:
-                reload_best_model_weight_if_changed(self.ai_agent)
-            idx += 1
 
     def start_rnd_game(self,idx):
         self.env.reset()
-        self.black = Connect4Player(self.config, self.ai_agent)
-        self.white = Connect4Player(self.config, self.ai_agent)
+        w_moves=[]
+        b_moves=[]
+        white=True
         while not self.env.done:
-            action = random.choice(self.env.get_legal_moves())
-            self.env.step(action)
-        self.finish_game()
-        self.save_play_data(write=idx % self.config.play_data.nb_game_in_file == 0)
-        removed=self.remove_play_data()
-        return removed
+            policy = np.random.rand(self.config.n_labels)
+            #softmax=np.exp(policy) / np.sum(np.exp(policy), axis=0, keepdims=True)
 
-    def start_game(self, idx):
-        self.env.reset()
-        self.black = Connect4Player(self.config, self.ai_agent)
-        self.white = Connect4Player(self.config, self.ai_agent)
-        while not self.env.done:
-            if self.env.player_turn() == 2:
-                action = self.black.action(self.env.board)
-            else:
-                action = self.white.action(self.env.board)
+            #action = np.random.choice(self.env.get_legal_moves(),p=softmax)  #this method results in number of legal moves not being equal to the number of outputs causing an error
+
+            action=np.random.choice(self.env.get_legal_moves())
+            policy[action]=1.0
+            softmax = np.exp(policy) / np.sum(np.exp(policy), axis=0, keepdims=True)
+
             self.env.step(action)
+            if white:
+                w_moves.append([self.env.observation, list(softmax)])
+            else:
+                b_moves.append([self.env.observation, list(softmax)])
+
+            white=(not white)
+
+
+        if self.env.winner == 2:
+            black_win = 1
+        elif self.env.winner == 1:
+            black_win = -1
+        else:
+            black_win = 0
+
+
+        #self.finish_game()
+        for m in w_moves:  # add this game winner result to all past moves.
+            m += [-black_win]
+        for m in b_moves:  # add this game winner result to all past moves.
+            m += [black_win]
+
+        self.save_play_data(b_moves=b_moves,w_moves=w_moves,write=idx % self.config.play_data.nb_game_in_file == 0)
+        #removed=self.remove_play_data()
+        return b_moves+w_moves
+
+    def start_game(self, idx,ai_Agent=None,env=None):
+        if ai_Agent==None:
+            ai_Agent=self.ai_agent
+        if env==None:
+            env=self.env
+        env.reset()
+        self.black = Connect4Player(self.config, ai_Agent)
+        self.white = Connect4Player(self.config, ai_Agent)
+        while not env.done:
+            if env.player_turn() == 2:
+                action = self.black.action(env.board)
+            else:
+                action = self.white.action(env.board)
+
+            env.step(action)
         self.finish_game()
         self.save_play_data(write=idx % self.config.play_data.nb_game_in_file == 0)
         self.remove_play_data()
-        return self.env
+        return env
 
-    def save_play_data(self, write=True):
-        data = self.black.moves + self.white.moves
+    def save_play_data(self,b_moves=None,w_moves=None, write=True):
+        data=None
+        if b_moves==None or w_moves==None:
+            data = self.black.moves + self.white.moves
+        else:
+            data=b_moves+w_moves
         self.buffer += data
 
         if not write:
@@ -114,7 +181,7 @@ class SelfPlayWorker:
         for i in range(len(files) - self.config.play_data.max_file_num):
             with contextlib.suppress(FileNotFoundError): #in case we have two workers who clash during remove
                 os.remove(files[i]) #removes the oldest files
-                print("Removed some files")
+        print("Removed files")
 
         return True #removed some files
 
@@ -143,6 +210,7 @@ class SelfPlayWorker:
 
             stats = {}
             stats['total_steps'] = 0
+
             #self.model_best_config_path = os.path.join(self.model_dir, "model_best_config.json")
             #self.model_best_weight_path = os.path.join(self.model_dir, "model_best_weight.h5")
             #self.model_best_stats_path = os.path.join(self.model_dir, "model_best_stats.json"

@@ -30,7 +30,7 @@ def start(config: Config):
                     action = aiPlayer.get_move(env.clone())
                 print(f"{action}({t.interval}s)", end='')
 
-                print("IA moves to: " + str(action))
+                print("AI moves to: " + str(action))
 
             elif t ==humanPlayer.playing_as:
                 action = humanPlayer.get_move(env.clone())

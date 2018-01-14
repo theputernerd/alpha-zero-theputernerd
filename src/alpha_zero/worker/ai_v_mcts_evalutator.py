@@ -184,7 +184,7 @@ def play_Games(game,MCTSPlayer : MCTSPlayer,AIPlayer:Alpha_Zero_Player,ngames=30
     meanWins=[0.0,0.0]
     newlowText=""
     newhighText=""
-    g=AIPlayer.stats['total_steps']
+    g=AIPlayer.ai_agent.stats['total_steps']
     print(str(g)+". "+str(datetime.datetime.now().strftime('%H:%M:%S'))+" AI_Player( %s ) MCTSPlayer(%s)\t Games:%4d\t AIPlayer:%4d\t MCTSPlayer:%4d\t stale:%4d\t t=%0.2fs" % (
       AIPlayer.shortName,MCTSPlayer.shortName, result.p1wins + result.p2wins + result.stale, result.p1wins, result.p2wins,
     result.stale,
@@ -214,6 +214,7 @@ def GetResultvsAgent(config,game,ai_model_folder,iterations,ngames=30): #this an
         modelweightsname = config.resource.model_weights_name
         modlestatsname = config.resource.model_stats_name
         m=''.join((h,modelname))
+        tempFolder=config.resource.tempFolder
         config_path =os.path.join(tempFolder, m) #the hash is in case a separate worker wants to play with the same agent at the same time. This prevents another worker removing this file first.
         weight_path =os.path.join(tempFolder, ''.join((h,modelweightsname)))
         stats_path =os.path.join(tempFolder, ''.join((h,modlestatsname)))
@@ -266,6 +267,9 @@ def start(config: Config):
 
 
     playLatestOnly=False
+    while not os.path.exists(config.resource.history_best_dir):  # TODO: decide if this should test best or all
+        time.sleep(30)
+        logger.error(f"directory doesnt exist {config.resource.history_best_dir}")
     while True :
         played = False  # flag indicates if a game was played - in case all files have been analysed.
         if  (np.average(winRates)>0.65) and (len(winRates) >= winRates.maxlen):
@@ -329,13 +333,14 @@ def start(config: Config):
             key = folder.split("_")[-1]
             if not (key in perfDict):
                 played = True
-
+                print(f"steps: {key}")
                 result=GetResultvsAgent(config,env,folder,iterations[iteration_level] ,ngames=ngames)
                 perfDict[key] = [result.p1wins, result.p2wins, result.stale]
+
                 if not ((result.p1wins + result.p2wins + result.stale) == 0):
 
                     val = [key, result.p1wins, result.p2wins, result.stale]
-                    csvFile=os.path.join(resultsFolder,str(iterations[iteration_level])+'.csv')
+                    csvFile=os.path.join(config.resource.resultsFolder,str(iterations[iteration_level])+'.csv')
                     print('appending to:' + csvFile)
                     try:
                         with open(csvFile, 'a',

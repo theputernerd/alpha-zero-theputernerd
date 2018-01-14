@@ -7,8 +7,8 @@ def _project_dir():
     return d(d(d(os.path.abspath(__file__))))
 
 
-def _data_dir():
-    return os.path.join(_project_dir(), "data")
+def _root_data_dir():
+    return os.path.join(_project_dir(), "var")
 
 
 class Config:
@@ -38,7 +38,9 @@ class Options:
 class ResourceConfig:
     def __init__(self):
         self.project_dir = os.environ.get("PROJECT_DIR", _project_dir())
-        self.data_dir = os.environ.get("DATA_DIR", _data_dir())
+        self.root_data_dir = os.environ.get("ROOT_DATA_DIR", _root_data_dir())
+        self.data_dir = os.environ.get("DATA_DIR", os.path.join(self.root_data_dir, "data"))
+
         self.model_dir = os.environ.get("MODEL_DIR", os.path.join(self.data_dir, "model"))
         self.model_name="model_config.json"
         self.model_weights_name="model_weight.h5"
@@ -58,15 +60,14 @@ class ResourceConfig:
         self.history_best_dir=os.path.join(self.model_dir,"history_best")
         self.history_other_dir=os.path.join(self.model_dir,"history_other")
         self.zeroFolder=self.history_best_dir+"\\_0\\"
-        self.tempFolder = os.path.abspath('../../temp')
-        self.resultsFolder = os.path.abspath('../../results')
+        self.tempFolder = os.path.join(self.root_data_dir, "temp")
+        self.resultsFolder = os.path.join(self.root_data_dir, "results")
         self.log_dir = os.path.join(self.project_dir, "logs")
         self.main_log_path = os.path.join(self.log_dir, "main.log")
-        self.maxFilestoTrainWith=50  #there is 100 games per file. #this reduces training time. For small values do only 1 epoch
-        self.min_data_size_to_learn = 5000 #make sure there is enough data in each file to reach this number
+        self.min_data_size_to_learn = 100000 #make sure there is enough data in each file to reach this number
 
-
-
+        self.trainig_data_size=10000 #this is the size the training is truncated to. It is also how frequently next gen agents are created
+                                    #why a big dif between this and min_data_size_to_learn? so that there is good diversity of positions
     def create_directories(self,wait=True):
         #why is this so complex? So the user can decide if they want to reset everything, in case restart is unintentional.
         #to reset they just need to delete the folders. If it is not supposed to be a new run then thy can escapre the program.
@@ -107,7 +108,7 @@ class ResourceConfig:
 
 class PlayWithHumanConfig:
     def __init__(self):
-        self.simulation_num_per_move = 500
+        self.simulation_num_per_move = 5000
         self.thinking_loop = 2
         self.logging_thinking = True
         self.c_puct = 2

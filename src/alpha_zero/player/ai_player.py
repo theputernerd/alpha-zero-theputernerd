@@ -5,7 +5,7 @@ from alpha_zero.player.player_inherit_from import *
 from alpha_zero.agent.ai_agent import Ai_Agent
 from logging import getLogger
 logger = getLogger(__name__)
-
+import time
 
 class Alpha_Zero_Player(Player):
     def __init__(self,config,env,playing_as):  # env,player,agent inherited from Player
@@ -15,20 +15,19 @@ class Alpha_Zero_Player(Player):
         self.config=config
         self.player = Connect4Player(config, self.ai_agent)
         self.playing_as=playing_as
-        self.stats={}
         self.name='alpha_zero_player'
         self.shortName='alpha'
 
         pass
 
     def load(self,config_path, weight_path,stats_path):
-        val=self.ai_agent.load(config_path, weight_path)
+        val= self.ai_agent.load(config_path, weight_path, stats_path)
 
         if val:
             try:
-
-                self.stats=self.ai_agent.load_stats(stats_path)
-                logger.debug(f"stats loaded {stats_path}")
+                pass
+                #self.stats=self.ai_agent.load_stats(stats_path)
+                #logger.debug(f"stats loaded {stats_path}")
             except:
                 logger.error(f"stats not loaded from {stats_path}")
             #now load stats
@@ -40,8 +39,9 @@ class Alpha_Zero_Player(Player):
     def load_best_model(self,config):
         #self.ai_agent = Ai_Agent(config)
         if not load_best_model_weight(self.ai_agent):
-
-            raise RuntimeError("best model not found!")
+            time.sleep(10)
+            load_best_model_weight(self.ai_agent)
+            #raise RuntimeError("best model not found!")
         return self.ai_agent
 
     def get_move(self, env):

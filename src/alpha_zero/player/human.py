@@ -6,12 +6,12 @@ class Human_Player(Player):
         Player.playing_as=playing_as
 
         pass
-    def get_move(self, board):
+    def get_move(self, env):
         while True:
             try:
                 movement = input('\nEnter your movement (0, 1, 2, 3, 4, 5, 6): ')
                 movement = int(movement)
-                legal_moves = self.env.legal_moves()
+                legal_moves = env.legal_moves()
                 if legal_moves[int(movement)] == 1:
                     return int(movement)
                 else:

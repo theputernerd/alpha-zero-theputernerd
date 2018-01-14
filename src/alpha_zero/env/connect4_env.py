@@ -36,6 +36,11 @@ class Connect4Env(Environment):
         self.boardInit=deepcopy(self.board)
         pass
 
+        self.turn = 0
+        self.done = False
+        self.winner = None
+        self.resigned = False
+
     def _buildHoriz4(self):
         consecutive_count = 0
         col=0

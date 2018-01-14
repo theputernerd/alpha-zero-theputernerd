@@ -18,8 +18,11 @@ from alpha_zero.config import Config
 import logging
 logger = getLogger(__name__)
 logger.setLevel(logging.INFO)
-
-
+import time
+import filelock
+import random as rnd
+from alpha_zero.lib.helpers import *
+import datetime
 class Ai_Agent:
     def __init__(self, config: Config):
         self.config = config
@@ -28,6 +31,13 @@ class Ai_Agent:
         self.total_steps=0
         self.stats={}
         self.stats['total_steps'] = 0
+        self.stats['date'] = datetime.datetime.now().strftime("%d/%m/%Y")
+        self.stats['time'] = datetime.datetime.now().strftime("%H%M") + ":" + datetime.datetime.now().strftime("%S")
+
+        lock1 = My_File_Lock(self.config.resource.model_best_weight_path)
+        lock2 = My_File_Lock(self.config.resource.model_best_config_path)
+        lock3 = My_File_Lock(self.config.resource.model_best_stats_path)
+        self.bestFilesLocks=[lock1,lock2,lock3]
 
     def build(self):
         mc = self.config.model
@@ -83,30 +93,54 @@ class Ai_Agent:
                 m.update(f.read())
             return m.hexdigest()
 
-    def load(self, config_path, weight_path):
+    def load(self, config_path, weight_path, stats_path, wait=False,bestlock=False):
+            done=False
+        #if bestlock:
+        #    while any((self.bestFilesLocks[0].is_locked, self.bestFilesLocks[1].is_locked, self.bestFilesLocks[2].is_locked)):
+        #        time.sleep(rnd.random() + rnd.random(5))
 
-        if os.path.exists(config_path) and os.path.exists(weight_path):
-            logger.info(f"loading model from {config_path}")
-            try:  ##TODO: THere might be a thread clash with the file if another thread is moving the file at the time it is trying to be loaded. Need to check a few different places
-                with open(config_path, "rt") as f:
-                    self.model = Model.from_config(json.load(f))
-            except:
-                logger.error("line 89 ai_agent.py!!!!!!!!!!!!!!!!!!!!!Error loading model file")
-            try:
+            while not done:
+                if os.path.exists(config_path) and os.path.exists(weight_path):
+                    logger.info(f"loading model from {config_path}")
+                    str=""
+                    done=True
+                    try:  ##TODO: THere might be a thread clash with the file if another thread is moving the file at the time it is trying to be loaded. Need to check a few different places
+                        with open(config_path, "rt") as f:
+                            self.model = Model.from_config(json.load(f))
+                    except:
+                        str="line 89 ai_agent.py!!!!!!!!!!!!!!!!!!!!!Error loading model file"
+                        logger.error(str)
+                        done = False
 
-                self.model.load_weights(weight_path)
-                self.digest = self.fetch_digest(weight_path)
+                    try:
 
-            except:
-                logger.error("line 95 ai_agent.py!!!!!!!!!!!!!!!!!!!Error loading weights")
+                        self.model.load_weights(weight_path)
+                        self.digest = self.fetch_digest(weight_path)
 
-            logger.debug(f"loaded model digest = {self.digest}")
+                    except:
+                        str="line 95 ai_agent.py!!!!!!!!!!!!!!!!!!!Error loading weights"
+                        logger.error(str)
+                        done = False
 
+                    try:
+                        self.load_stats(stats_path)
+                        logger.debug(f"loaded model digest = {self.digest}")
+                    except:
+                        done=False
+                        logger.error("line 116 Error loading stats.")
+
+
+                else:
+                    str=(f"model files does not exist at {config_path} and {weight_path}")
+                    logger.error(str)
+                    done=False
+
+                if done==False:
+                    if wait == False:
+                        return False
+                    time.sleep(10)
 
             return True
-        else:
-            logger.debug(f"model files does not exist at {config_path} and {weight_path}")
-            return False
 
     def load_stats(self,filename):
 
@@ -116,8 +150,7 @@ class Ai_Agent:
             pass
 
     def save_stats(self,filename):
-
-        self.stats['total_steps']=self.total_steps
+        logger.debug(f"total_steps:{self.stats['total_steps']})")
 
         with open(filename, 'w') as f:
             json.dump(self.stats, f)

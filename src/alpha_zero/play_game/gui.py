@@ -16,16 +16,21 @@ def start(config: Config):
     humanPlayer=Human_Player(env,playing_as=2)
     env = Connect4Env().reset()
     aiPlayer=Alpha_Zero_Player(config,env,1)
-
+    aiPlayer.load_best_model(config)
     while True:
         env = Connect4Env()
         env.reset()
         humanPlayer.playing_as = 3 - aiPlayer.playing_as
+        env.step(3)
+        env.step(3)
+        env.step(3)
+        env.step(3)
+
         while not env.done:
             t=env.player_turn()
             if t == aiPlayer.playing_as:
                 action = aiPlayer.get_move(env)
-                print("IA moves to: " + str(action))
+                print("AI moves to: " + str(action))
 
             elif t ==humanPlayer.playing_as:
                 action = humanPlayer.get_move(env)
