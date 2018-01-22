@@ -10,7 +10,7 @@ def load_best_model_weight(ai_agent):
     :return:
     """
     val= ai_agent.load(ai_agent.config.resource.model_best_config_path, ai_agent.config.resource.model_best_weight_path,
-                       ai_agent.config.resource.model_best_stats_path,wait=False)
+                       ai_agent.config.resource.model_best_stats_path)
     try:
         pass #logger.debug("loading stats")
         #ai_agent.stats=ai_agent.load_stats(ai_agent.config.resource.model_best_stats_path)
@@ -28,7 +28,8 @@ def save_as_best_model(ai_agent):
     :param alpha_zero.agent.model.ChessModel model:
     :return:
     """
-    return ai_agent.save(ai_agent.config.resource.model_best_config_path, ai_agent.config.resource.model_best_weight_path,ai_agent.config.resource.model_best_stats_path)
+    return ai_agent.save(ai_agent.config.resource.model_best_config_path,
+                         ai_agent.config.resource.model_best_weight_path)
 
 def reload_best_model_weight_if_changed(ai_agent):
     """

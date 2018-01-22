@@ -148,7 +148,7 @@ class OptimizeWorker:
 
         stats_path= os.path.join(model_dir, rc.model_stats_name)
 
-        self.ai_agent.save(config_path, weight_path,stats_path)
+        self.ai_agent.save(config_path, weight_path)
 
 
 

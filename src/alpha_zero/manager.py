@@ -18,6 +18,7 @@ def create_parser():
     parser.add_argument("--total-step", help="set TrainerConfig.start_total_steps", type=int)
     return parser
 
+
 def setup(config: Config, args):
     config.opts.new = args.new
     if args.total_step is not None:

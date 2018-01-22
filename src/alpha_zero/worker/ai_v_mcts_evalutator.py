@@ -266,7 +266,7 @@ def start(config: Config):
     perfDict = {}  # TODO Save the performance dictionary so it can be reloaded anytime.
 
 
-    playLatestOnly=False
+    playLatestOnly=True
     while not os.path.exists(config.resource.history_best_dir):  # TODO: decide if this should test best or all
         time.sleep(30)
         logger.error(f"directory doesnt exist {config.resource.history_best_dir}")

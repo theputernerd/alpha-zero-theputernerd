@@ -14,15 +14,16 @@ from keras.layers.normalization import BatchNormalization
 from keras.losses import mean_squared_error
 from keras.regularizers import l2
 
-from alpha_zero.config import Config
+from reversi_zero.config import Config
 import logging
 logger = getLogger(__name__)
 logger.setLevel(logging.INFO)
 import time
 import filelock
 import random as rnd
-from alpha_zero.lib.helpers import *
+from reversi_zero.lib.helpers import *
 import datetime
+
 class Ai_Agent:
     def __init__(self, config: Config):
         self.config = config
@@ -93,16 +94,12 @@ class Ai_Agent:
                 m.update(f.read())
             return m.hexdigest()
 
-    def load(self, config_path, weight_path, stats_path, wait=False,bestlock=False):
+    def load(self, config_path, weight_path, stats_path, wait=False):
             done=False
-        #if bestlock:
-        #    while any((self.bestFilesLocks[0].is_locked, self.bestFilesLocks[1].is_locked, self.bestFilesLocks[2].is_locked)):
-        #        time.sleep(rnd.random() + rnd.random(5))
-
             while not done:
+
                 if os.path.exists(config_path) and os.path.exists(weight_path):
                     logger.info(f"loading model from {config_path}")
-                    str=""
                     done=True
                     try:  ##TODO: THere might be a thread clash with the file if another thread is moving the file at the time it is trying to be loaded. Need to check a few different places
                         with open(config_path, "rt") as f:
@@ -111,17 +108,14 @@ class Ai_Agent:
                         str="line 89 ai_agent.py!!!!!!!!!!!!!!!!!!!!!Error loading model file"
                         logger.error(str)
                         done = False
-
                     try:
 
                         self.model.load_weights(weight_path)
                         self.digest = self.fetch_digest(weight_path)
-
                     except:
                         str="line 95 ai_agent.py!!!!!!!!!!!!!!!!!!!Error loading weights"
                         logger.error(str)
                         done = False
-
                     try:
                         self.load_stats(stats_path)
                         logger.debug(f"loaded model digest = {self.digest}")
@@ -134,7 +128,6 @@ class Ai_Agent:
                     str=(f"model files does not exist at {config_path} and {weight_path}")
                     logger.error(str)
                     done=False
-
                 if done==False:
                     if wait == False:
                         return False
@@ -155,7 +148,7 @@ class Ai_Agent:
         with open(filename, 'w') as f:
             json.dump(self.stats, f)
 
-    def save(self, config_path, weight_path,stats_path):
+    def save(self, config_path, weight_path, stats_path):
         logger.debug(f"save model to {config_path}")
         with open(config_path, "wt") as f:
             json.dump(self.model.get_config(), f)

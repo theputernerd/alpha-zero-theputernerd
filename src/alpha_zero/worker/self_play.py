@@ -91,6 +91,7 @@ class SelfPlayWorker:
             logger.debug(f"game {i} time={end_time - start_time} sec, "
                          f"turn={env.turn}:{env.observation} - Winner:{env.winner}")
 
+
     def start_rnd_game(self,idx):
         self.env.reset()
         w_moves=[]
@@ -172,10 +173,7 @@ class SelfPlayWorker:
         self.buffer = []
 
     def remove_play_data(self):
-
         files = get_game_data_filenames(self.config.resource)
-
-
         if len(files) < self.config.play_data.max_file_num:
             return False #didn't remove any
         for i in range(len(files) - self.config.play_data.max_file_num):

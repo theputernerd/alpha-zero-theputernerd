@@ -65,6 +65,7 @@ class ResourceConfig:
         self.log_dir = os.path.join(self.project_dir, "logs")
         self.main_log_path = os.path.join(self.log_dir, "main.log")
         self.min_data_size_to_learn = 100000 #make sure there is enough data in each file to reach this number
+        self.tensorboard_log_dir = os.path.join(self.log_dir, 'tensorboard')
 
         self.trainig_data_size=10000 #this is the size the training is truncated to. It is also how frequently next gen agents are created
                                     #why a big dif between this and min_data_size_to_learn? so that there is good diversity of positions
@@ -105,17 +106,23 @@ class ResourceConfig:
                     time.sleep(20)
         return hadToCreateDirs
 
+class GuiConfig:
+    def __init__(self):
+        self.window_size = (400, 440)
+        self.window_title = "reversi-alpha-zero"
+
 
 class PlayWithHumanConfig:
     def __init__(self):
-        self.simulation_num_per_move = 5000
-        self.thinking_loop = 2
+        self.simulation_num_per_move = 100
+        self.thinking_loop = 1
         self.logging_thinking = True
-        self.c_puct = 2
-        self.parallel_search_num = 32
+        self.c_puct = 1
+        self.parallel_search_num = 8
         self.noise_eps = 0
         self.change_tau_turn = 0
         self.resign_threshold = None
+        self.use_newest_next_generation_model = True
 
     def update_play_config(self, pc):
         """
@@ -131,10 +138,11 @@ class PlayWithHumanConfig:
         pc.change_tau_turn = self.change_tau_turn
         pc.parallel_search_num = self.parallel_search_num
         pc.resign_threshold = self.resign_threshold
+        pc.use_newest_next_generation_model = self.use_newest_next_generation_model
 
 class PlayVMCTSConfig:
     def __init__(self):
-        self.simulation_num_per_move = 100
+        self.simulation_num_per_move = 20
         self.thinking_loop = 10
         self.logging_thinking = True
         self.c_puct = 2
@@ -157,3 +165,9 @@ class PlayVMCTSConfig:
         pc.change_tau_turn = self.change_tau_turn
         pc.parallel_search_num = self.parallel_search_num
         pc.resign_threshold = self.resign_threshold
+class NBoardConfig:
+    def __init__(self):
+        self.my_name = "RAZ"
+        self.read_stdin_timeout = 0.1
+        self.simulation_num_per_depth_about = 20
+        self.hint_callback_per_sim = 10

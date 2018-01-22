@@ -24,7 +24,7 @@ class Connect4Player:
         self.play_config = play_config or self.config.play
         #self.api = Connect4ModelAPI(self.config, self.model)
 
-        self.labels_n = config.n_labels
+        self.labels_n = config.resource.env_ptr().n_actions
         self.var_n = defaultdict(lambda: np.zeros((self.labels_n,)))
         self.var_w = defaultdict(lambda: np.zeros((self.labels_n,)))
         self.var_q = defaultdict(lambda: np.zeros((self.labels_n,)))
